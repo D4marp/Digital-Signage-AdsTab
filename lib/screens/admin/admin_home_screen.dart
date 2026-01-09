@@ -37,11 +37,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
     _tabController.dispose();
     super.dispose();
   }
-      icon: Icon(Icons.settings_outlined),
-      selectedIcon: Icon(Icons.settings),
-      label: Text('Settings'),
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
