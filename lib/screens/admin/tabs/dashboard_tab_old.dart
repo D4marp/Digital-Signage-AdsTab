@@ -110,8 +110,8 @@ class _DashboardTabState extends State<DashboardTab> {
           AppTheme.secondaryColor,
         ),
         _buildStatCard(
-          'Active Devices',
-          '${_stats?.activeDevices ?? 0}',
+          'Online Devices',
+          '${_stats?.onlineDevices ?? 0}',
           Icons.tablet_android,
           AppTheme.accentColor,
         ),

@@ -42,48 +42,57 @@ class _DashboardTabState extends State<DashboardTab> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    final isTablet = MediaQuery.of(context).size.width >= 768 && MediaQuery.of(context).size.width < 1024;
+
     return RefreshIndicator(
       onRefresh: _loadStats,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Welcome Header
-            _buildWelcomeHeader(),
-            const SizedBox(height: 32),
+            _buildWelcomeHeader(isMobile),
+            SizedBox(height: isMobile ? 20 : 32),
             
             // Stats Overview Cards
-            _buildStatsOverview(),
-            const SizedBox(height: 32),
+            _buildStatsOverview(isMobile, isTablet),
+            SizedBox(height: isMobile ? 20 : 32),
             
-            // Charts Row
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Performance Chart
-                Expanded(
-                  flex: 2,
-                  child: _buildPerformanceChart(),
-                ),
-                const SizedBox(width: 24),
-                // Top Ads List
-                Expanded(
-                  child: _buildTopAds(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
+            // Charts and Top Ads
+            isMobile
+                ? Column(
+                    children: [
+                      _buildPerformanceChart(isMobile),
+                      SizedBox(height: isMobile ? 20 : 32),
+                      _buildTopAds(isMobile),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: _buildPerformanceChart(isMobile),
+                      ),
+                      SizedBox(width: isMobile ? 16 : 24),
+                      Expanded(
+                        child: _buildTopAds(isMobile),
+                      ),
+                    ],
+                  ),
+            SizedBox(height: isMobile ? 20 : 32),
             
             // Quick Actions
-            _buildQuickActions(),
+            _buildQuickActions(isMobile),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildWelcomeHeader() {
+  Widget _buildWelcomeHeader(bool isMobile) {
     final hour = DateTime.now().hour;
     String greeting = 'Good Morning';
     IconData icon = Icons.wb_sunny;
@@ -100,7 +109,7 @@ class _DashboardTabState extends State<DashboardTab> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.blue.shade600, Colors.blue.shade400],
@@ -116,19 +125,30 @@ class _DashboardTabState extends State<DashboardTab> {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Icon(icon, color: iconColor, size: 48),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
+      child: isMobile
+          ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Icon(icon, color: iconColor, size: 40),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.dashboard, color: Colors.white, size: 24),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
                 Text(
                   greeting,
                   style: const TextStyle(
                     color: Colors.white70,
-                    fontSize: 16,
+                    fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -136,34 +156,71 @@ class _DashboardTabState extends State<DashboardTab> {
                   'Welcome to Digital Signage Dashboard',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
+            )
+          : Row(
+              children: [
+                Icon(icon, color: iconColor, size: 48),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        greeting,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Welcome to Digital Signage Dashboard',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.dashboard, color: Colors.white, size: 32),
+                ),
+              ],
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.dashboard, color: Colors.white, size: 32),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildStatsOverview() {
+  Widget _buildStatsOverview(bool isMobile, bool isTablet) {
+    int crossCount = 4;
+    double aspectRatio = 1.5;
+    
+    if (isMobile) {
+      crossCount = 2;
+      aspectRatio = 1.2;
+    } else if (isTablet) {
+      crossCount = 3;
+      aspectRatio = 1.3;
+    }
+
     return GridView.count(
-      crossAxisCount: 4,
+      crossAxisCount: crossCount,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 1.5,
+      mainAxisSpacing: isMobile ? 12 : 16,
+      crossAxisSpacing: isMobile ? 12 : 16,
+      childAspectRatio: aspectRatio,
       children: [
         _buildStatCard(
           'Today\'s Views',
@@ -172,30 +229,34 @@ class _DashboardTabState extends State<DashboardTab> {
           Colors.blue,
           Colors.blue.shade50,
           '+12%',
+          isMobile,
         ),
         _buildStatCard(
-          'Total Impressions',
-          FormatHelper.formatNumber(_stats?.totalImpressions ?? 0),
+          'Total Impressions (30d)',
+          FormatHelper.formatNumber(_stats?.totalImpressions30d ?? 0),
           Icons.visibility,
           Colors.green,
           Colors.green.shade50,
           '+8%',
+          isMobile,
         ),
         _buildStatCard(
           'Active Ads',
-          '${_stats?.totalAds ?? 0}',
+          '${_stats?.activeAds ?? 0}',
           Icons.campaign,
           Colors.orange,
           Colors.orange.shade50,
-          '${_stats?.totalAds ?? 0} live',
+          '${_stats?.activeAds ?? 0} live',
+          isMobile,
         ),
         _buildStatCard(
           'Online Devices',
-          '${_stats?.activeDevices ?? 0}',
+          '${_stats?.onlineDevices ?? 0}',
           Icons.devices,
           Colors.purple,
           Colors.purple.shade50,
           'Connected',
+          isMobile,
         ),
       ],
     );
@@ -208,9 +269,10 @@ class _DashboardTabState extends State<DashboardTab> {
     Color color,
     Color bgColor,
     String badge,
+    bool isMobile,
   ) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 12 : 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -231,24 +293,24 @@ class _DashboardTabState extends State<DashboardTab> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: bgColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: Icon(icon, color: color, size: isMobile ? 18 : 24),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   badge,
                   style: TextStyle(
                     color: color,
-                    fontSize: 10,
+                    fontSize: isMobile ? 9 : 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -261,19 +323,23 @@ class _DashboardTabState extends State<DashboardTab> {
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: isMobile ? 18 : 28,
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: isMobile ? 10 : 12,
                   color: Colors.grey.shade600,
                   fontWeight: FontWeight.w500,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -282,9 +348,9 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  Widget _buildPerformanceChart() {
+  Widget _buildPerformanceChart(bool isMobile) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -300,28 +366,52 @@ class _DashboardTabState extends State<DashboardTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Performance Overview',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+          isMobile
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Performance Overview',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildLegendItem('Impressions', Colors.blue),
+                          const SizedBox(width: 20),
+                          _buildLegendItem('Devices', Colors.orange),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Performance Overview',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        _buildLegendItem('Impressions', Colors.blue),
+                        const SizedBox(width: 16),
+                        _buildLegendItem('Devices', Colors.orange),
+                      ],
+                    ),
+                  ],
                 ),
-              ),
-              Row(
-                children: [
-                  _buildLegendItem('Impressions', Colors.blue),
-                  const SizedBox(width: 16),
-                  _buildLegendItem('Devices', Colors.orange),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           SizedBox(
-            height: 250,
+            height: isMobile ? 200 : 250,
             child: LineChart(
               LineChartData(
                 gridData: FlGridData(
@@ -338,14 +428,14 @@ class _DashboardTabState extends State<DashboardTab> {
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40,
+                      showTitles: !isMobile,
+                      reservedSize: isMobile ? 30 : 40,
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
                           style: TextStyle(
                             color: Colors.grey.shade600,
-                            fontSize: 12,
+                            fontSize: isMobile ? 10 : 12,
                           ),
                         );
                       },
@@ -363,7 +453,7 @@ class _DashboardTabState extends State<DashboardTab> {
                               days[value.toInt()],
                               style: TextStyle(
                                 color: Colors.grey.shade600,
-                                fontSize: 12,
+                                fontSize: isMobile ? 10 : 12,
                               ),
                             ),
                           );
@@ -390,8 +480,10 @@ class _DashboardTabState extends State<DashboardTab> {
                     ],
                     isCurved: true,
                     color: Colors.blue,
-                    barWidth: 3,
-                    dotData: const FlDotData(show: true),
+                    barWidth: isMobile ? 2 : 3,
+                    dotData: FlDotData(
+                      show: !isMobile,
+                    ),
                     belowBarData: BarAreaData(
                       show: true,
                       color: Colors.blue.withOpacity(0.1),
@@ -410,8 +502,10 @@ class _DashboardTabState extends State<DashboardTab> {
                     ],
                     isCurved: true,
                     color: Colors.orange,
-                    barWidth: 3,
-                    dotData: const FlDotData(show: true),
+                    barWidth: isMobile ? 2 : 3,
+                    dotData: FlDotData(
+                      show: !isMobile,
+                    ),
                     belowBarData: BarAreaData(
                       show: true,
                       color: Colors.orange.withOpacity(0.1),
@@ -449,11 +543,11 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  Widget _buildTopAds() {
+  Widget _buildTopAds(bool isMobile) {
     final topAds = _stats?.topAds ?? [];
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -477,48 +571,58 @@ class _DashboardTabState extends State<DashboardTab> {
                   color: Colors.amber.shade50,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.star, color: Colors.amber.shade700, size: 20),
+                child: Icon(Icons.star, color: Colors.amber.shade700, size: isMobile ? 18 : 20),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'Top Performing Ads',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  'Top Performing Ads',
+                  style: TextStyle(
+                    fontSize: isMobile ? 14 : 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           if (topAds.isEmpty)
-            Center(
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Icon(Icons.campaign_outlined, size: 64, color: Colors.grey.shade300),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No ads yet',
-                    style: TextStyle(color: Colors.grey.shade500),
-                  ),
-                ],
+            SizedBox(
+              height: isMobile ? 120 : 200,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.campaign_outlined, size: isMobile ? 48 : 64, color: Colors.grey.shade300),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No ads yet',
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: isMobile ? 12 : 14),
+                    ),
+                  ],
+                ),
               ),
             )
           else
-            ...topAds.asMap().entries.map((entry) {
-              final index = entry.key;
-              final ad = entry.value;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildTopAdItem(index + 1, ad.title, ad.impressions),
-              );
-            }),
+            SingleChildScrollView(
+              child: Column(
+                children: topAds.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final ad = entry.value;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildTopAdItem(index + 1, ad.title, ad.impressions, isMobile),
+                  );
+                }).toList(),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildTopAdItem(int rank, String title, int impressions) {
+  Widget _buildTopAdItem(int rank, String title, int impressions, bool isMobile) {
     Color rankColor;
     if (rank == 1) {
       rankColor = Colors.amber.shade700;
@@ -531,7 +635,7 @@ class _DashboardTabState extends State<DashboardTab> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(isMobile ? 10 : 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -540,8 +644,8 @@ class _DashboardTabState extends State<DashboardTab> {
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: isMobile ? 28 : 32,
+            height: isMobile ? 28 : 32,
             decoration: BoxDecoration(
               color: rankColor,
               shape: BoxShape.circle,
@@ -549,24 +653,24 @@ class _DashboardTabState extends State<DashboardTab> {
             child: Center(
               child: Text(
                 '#$rank',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 12,
+                  fontSize: isMobile ? 10 : 12,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    fontSize: isMobile ? 12 : 14,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -574,14 +678,16 @@ class _DashboardTabState extends State<DashboardTab> {
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    Icon(Icons.visibility, size: 12, color: Colors.grey.shade600),
+                    Icon(Icons.visibility, size: 10, color: Colors.grey.shade600),
                     const SizedBox(width: 4),
                     Text(
                       '${FormatHelper.formatNumber(impressions)} views',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: isMobile ? 10 : 12,
                         color: Colors.grey.shade600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -593,9 +699,9 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(bool isMobile) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.indigo.shade50, Colors.blue.shade50],
@@ -614,61 +720,104 @@ class _DashboardTabState extends State<DashboardTab> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.flash_on, color: Colors.amber.shade700, size: 20),
+                child: Icon(Icons.flash_on, color: Colors.amber.shade700, size: isMobile ? 18 : 20),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Quick Actions',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: isMobile ? 14 : 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionCard(
-                  'Upload New Ad',
-                  'Create and publish',
-                  Icons.add_photo_alternate,
-                  Colors.blue,
-                  () {
-                    final controller = DefaultTabController.of(context);
-                    controller.animateTo(1);
-                  },
+          const SizedBox(height: 16),
+          isMobile
+              ? Column(
+                  children: [
+                    _buildActionCard(
+                      'Upload New Ad',
+                      'Create and publish',
+                      Icons.add_photo_alternate,
+                      Colors.blue,
+                      () {
+                        final controller = DefaultTabController.of(context);
+                        controller.animateTo(1);
+                      },
+                      isMobile,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildActionCard(
+                      'View Analytics',
+                      'Track performance',
+                      Icons.bar_chart,
+                      Colors.green,
+                      () {
+                        final controller = DefaultTabController.of(context);
+                        controller.animateTo(2);
+                      },
+                      isMobile,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildActionCard(
+                      'Manage Devices',
+                      'Monitor screens',
+                      Icons.devices,
+                      Colors.orange,
+                      () {
+                        final controller = DefaultTabController.of(context);
+                        controller.animateTo(3);
+                      },
+                      isMobile,
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: _buildActionCard(
+                        'Upload New Ad',
+                        'Create and publish',
+                        Icons.add_photo_alternate,
+                        Colors.blue,
+                        () {
+                          final controller = DefaultTabController.of(context);
+                          controller.animateTo(1);
+                        },
+                        isMobile,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildActionCard(
+                        'View Analytics',
+                        'Track performance',
+                        Icons.bar_chart,
+                        Colors.green,
+                        () {
+                          final controller = DefaultTabController.of(context);
+                          controller.animateTo(2);
+                        },
+                        isMobile,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildActionCard(
+                        'Manage Devices',
+                        'Monitor screens',
+                        Icons.devices,
+                        Colors.orange,
+                        () {
+                          final controller = DefaultTabController.of(context);
+                          controller.animateTo(3);
+                        },
+                        isMobile,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildActionCard(
-                  'View Analytics',
-                  'Track performance',
-                  Icons.bar_chart,
-                  Colors.green,
-                  () {
-                    final controller = DefaultTabController.of(context);
-                    controller.animateTo(2);
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildActionCard(
-                  'Manage Devices',
-                  'Monitor screens',
-                  Icons.devices,
-                  Colors.orange,
-                  () {
-                    final controller = DefaultTabController.of(context);
-                    controller.animateTo(3);
-                  },
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -680,12 +829,13 @@ class _DashboardTabState extends State<DashboardTab> {
     IconData icon,
     Color color,
     VoidCallback onTap,
+    bool isMobile,
   ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(isMobile ? 16 : 20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -701,30 +851,34 @@ class _DashboardTabState extends State<DashboardTab> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(isMobile ? 12 : 16),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 32),
+              child: Icon(icon, color: color, size: isMobile ? 24 : 32),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: isMobile ? 10 : 12),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: isMobile ? 12 : 14,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: isMobile ? 2 : 4),
             Text(
               subtitle,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: isMobile ? 10 : 11,
                 color: Colors.grey.shade600,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

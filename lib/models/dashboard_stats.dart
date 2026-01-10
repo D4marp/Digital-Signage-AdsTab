@@ -1,24 +1,30 @@
 class DashboardStats {
+  final int activeAds;
+  final int onlineDevices;
   final int todayImpressions;
-  final int totalImpressions;
-  final int activeDevices;
   final int totalAds;
+  final int totalDevices;
+  final int totalImpressions30d;
   final List<TopAd> topAds;
 
   DashboardStats({
+    required this.activeAds,
+    required this.onlineDevices,
     required this.todayImpressions,
-    required this.totalImpressions,
-    required this.activeDevices,
     required this.totalAds,
+    required this.totalDevices,
+    required this.totalImpressions30d,
     required this.topAds,
   });
 
   factory DashboardStats.fromJson(Map<String, dynamic> json) {
     return DashboardStats(
+      activeAds: json['active_ads'] ?? 0,
+      onlineDevices: json['online_devices'] ?? 0,
       todayImpressions: json['today_impressions'] ?? 0,
-      totalImpressions: json['total_impressions'] ?? 0,
-      activeDevices: json['active_devices'] ?? 0,
       totalAds: json['total_ads'] ?? 0,
+      totalDevices: json['total_devices'] ?? 0,
+      totalImpressions30d: json['total_impressions_30d'] ?? 0,
       topAds: (json['top_ads'] as List? ?? [])
           .map((item) => TopAd.fromJson(item))
           .toList(),

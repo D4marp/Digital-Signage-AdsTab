@@ -4,6 +4,7 @@ class UserModel {
   final String displayName;
   final String role; // 'admin' or 'superadmin'
   final DateTime createdAt;
+  final DateTime updatedAt;
 
   UserModel({
     required this.uid,
@@ -11,6 +12,7 @@ class UserModel {
     required this.displayName,
     required this.role,
     required this.createdAt,
+    required this.updatedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class UserModel {
       displayName: json['display_name'] ?? '',
       role: json['role'] ?? 'admin',
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      updatedAt: DateTime.parse(json['updated_at'] ?? DateTime.now().toIso8601String()),
     );
   }
 
@@ -30,6 +33,7 @@ class UserModel {
       'display_name': displayName,
       'role': role,
       'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 }

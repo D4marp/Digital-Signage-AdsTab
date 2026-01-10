@@ -37,8 +37,10 @@ func (ds DeviceSettings) Value() (driver.Value, error) {
 }
 
 type RegisterDeviceRequest struct {
-	DeviceID string `json:"device_id" binding:"required"`
-	Location string `json:"location" binding:"required"`
+	DeviceID   string `json:"device_id"`
+	DeviceName string `json:"device_name"`
+	DeviceType string `json:"device_type"`
+	Location   string `json:"location" binding:"required"`
 }
 
 type UpdateDeviceRequest struct {

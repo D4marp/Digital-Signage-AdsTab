@@ -46,7 +46,7 @@ func (h *AdHandler) GetAds(c *gin.Context) {
 
 	rows, err := database.DB.Query(query, args...)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch ads"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch ads", "details": err.Error()})
 		return
 	}
 	defer rows.Close()
@@ -79,6 +79,12 @@ func (h *AdHandler) GetAds(c *gin.Context) {
 		}
 
 		ads = append(ads, ad)
+	}
+
+	// Check for errors from iteration
+	if err := rows.Err(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading ads", "details": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, ads)
@@ -146,7 +152,7 @@ func (h *AdHandler) CreateAd(c *gin.Context) {
 	`, adID, req.Title, req.MediaURL, req.MediaType, req.DurationSeconds, maxOrder+1,
 		targetLocationsJSON, userID, req.Description, req.CompanyName, req.ContactInfo, req.WebsiteURL)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create ad"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create ad", "details": err.Error()})
 		return
 	}
 

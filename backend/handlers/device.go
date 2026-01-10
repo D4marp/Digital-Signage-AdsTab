@@ -80,6 +80,11 @@ func (h *DeviceHandler) RegisterDevice(c *gin.Context) {
 		return
 	}
 
+	// Auto-generate device_id if not provided
+	if req.DeviceID == "" {
+		req.DeviceID = uuid.New().String()
+	}
+
 	// Check if device already exists
 	var existingID string
 	err := database.DB.QueryRow("SELECT id FROM devices WHERE device_id = ?", req.DeviceID).Scan(&existingID)

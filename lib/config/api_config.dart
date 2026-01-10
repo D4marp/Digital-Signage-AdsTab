@@ -1,6 +1,7 @@
 class ApiConfig {
-  // Use 127.0.0.1 for better iOS simulator compatibility
-  static const String baseUrl = 'http://127.0.0.1:8080/api/v1';
+  // Use real IP for physical device, localhost for simulator
+  // For real device: use Mac's local network IP
+  static const String baseUrl = 'http://192.168.9.181:8080/api/v1';
   
   // Auth endpoints
   static const String login = '$baseUrl/auth/login';
@@ -28,5 +29,5 @@ class ApiConfig {
   static String adPerformance(String id) => '$baseUrl/analytics/ads/$id/performance';
   
   // Upload URL base
-  static const String uploadBaseUrl = 'http://127.0.0.1:8080';
+  static const String uploadBaseUrl = 'http://192.168.9.181:8080';
 }

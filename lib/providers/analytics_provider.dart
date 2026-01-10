@@ -98,10 +98,12 @@ class AnalyticsProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error getting overall stats: $e');
       return DashboardStats(
+        activeAds: 0,
+        onlineDevices: 0,
         todayImpressions: 0,
-        totalImpressions: 0,
-        activeDevices: 0,
         totalAds: 0,
+        totalDevices: 0,
+        totalImpressions30d: 0,
         topAds: [],
       );
     }
