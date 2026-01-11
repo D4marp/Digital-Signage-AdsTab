@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../utils/responsive_helper.dart';
 import '../auth/login_screen.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/ads_tab.dart';
@@ -41,6 +42,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final isMobile = ResponsiveHelper.isMobile(context);
 
     return DefaultTabController(
       length: 5,
@@ -67,8 +69,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
             ],
           ),
           actions: [
-            // User info
-            if (authProvider.userModel != null)
+            // User info - hide di mobile
+            if (!isMobile && authProvider.userModel != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -98,6 +100,17 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
                   ],
                 ),
               ),
+            if (isMobile && authProvider.userModel != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: CircleAvatar(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  child: Text(
+                    authProvider.userModel!.displayName[0].toUpperCase(),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
             // Logout button
             IconButton(
               icon: const Icon(Icons.logout),
@@ -105,16 +118,16 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
               onPressed: () async {
                 final confirm = await showDialog<bool>(
                   context: context,
-                  builder: (context) => AlertDialog(
+                  builder: (dialogContext) => AlertDialog(
                     title: const Text('Logout'),
                     content: const Text('Are you sure you want to logout?'),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
                         child: const Text('Cancel'),
                       ),
                       ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(true),
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
@@ -128,6 +141,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
                 if (confirm == true && mounted) {
                   await authProvider.signOut();
                   if (mounted) {
+                    // ignore: use_build_context_synchronously
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder: (_) => const LoginScreen(),
@@ -138,12 +152,20 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
               },
             ),
           ],
-          bottom: TabBar(
-            controller: _tabController,
-            tabs: _tabs,
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicatorWeight: 3,
-          ),
+          bottom: isMobile
+              ? TabBar(
+                  controller: _tabController,
+                  tabs: _tabs,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  indicatorWeight: 3,
+                  isScrollable: true,
+                )
+              : TabBar(
+                  controller: _tabController,
+                  tabs: _tabs,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicatorWeight: 3,
+                ),
         ),
         body: TabBarView(
           controller: _tabController,

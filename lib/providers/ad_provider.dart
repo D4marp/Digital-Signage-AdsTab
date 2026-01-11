@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'dart:io';
+import 'dart:async';
 import '../models/ad_model.dart';
 import '../services/api_client.dart';
 import '../config/api_config.dart';
 
 class AdProvider extends ChangeNotifier {
   final ApiClient _apiClient = ApiClient();
+  late StreamController<List<AdModel>> _adsStreamController;
 
   List<AdModel> _ads = [];
   bool _isLoading = false;
@@ -18,7 +20,14 @@ class AdProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   AdProvider() {
+    _adsStreamController = StreamController<List<AdModel>>.broadcast();
     loadAds();
+  }
+
+  @override
+  void dispose() {
+    _adsStreamController.close();
+    super.dispose();
   }
 
   Future<void> loadAds() async {
@@ -31,6 +40,12 @@ class AdProvider extends ChangeNotifier {
           .map((json) => AdModel.fromJson(json))
           .toList();
       _isLoading = false;
+      
+      // Emit data ke stream
+      if (!_adsStreamController.isClosed) {
+        _adsStreamController.add(_ads);
+      }
+      
       notifyListeners();
     } on DioException catch (e) {
       _errorMessage = 'Failed to load ads: ${e.message}';
@@ -109,6 +124,12 @@ class AdProvider extends ChangeNotifier {
 
       final newAd = AdModel.fromJson(response.data);
       _ads.add(newAd);
+      
+      // Emit ke stream
+      if (!_adsStreamController.isClosed) {
+        _adsStreamController.add(_ads);
+      }
+      
       notifyListeners();
       return true;
     } on DioException catch (e) {
@@ -153,6 +174,12 @@ class AdProvider extends ChangeNotifier {
       final index = _ads.indexWhere((ad) => ad.id == id);
       if (index != -1) {
         _ads[index] = updatedAd;
+        
+        // Emit ke stream
+        if (!_adsStreamController.isClosed) {
+          _adsStreamController.add(_ads);
+        }
+        
         notifyListeners();
       }
       return true;
@@ -167,6 +194,12 @@ class AdProvider extends ChangeNotifier {
     try {
       await _apiClient.dio.delete(ApiConfig.adById(id));
       _ads.removeWhere((ad) => ad.id == id);
+      
+      // Emit ke stream
+      if (!_adsStreamController.isClosed) {
+        _adsStreamController.add(_ads);
+      }
+      
       notifyListeners();
       return true;
     } on DioException catch (e) {
@@ -193,6 +226,12 @@ class AdProvider extends ChangeNotifier {
       );
 
       _ads = reorderedAds;
+      
+      // Emit ke stream
+      if (!_adsStreamController.isClosed) {
+        _adsStreamController.add(_ads);
+      }
+      
       notifyListeners();
       return true;
     } on DioException catch (e) {
@@ -202,12 +241,12 @@ class AdProvider extends ChangeNotifier {
     }
   }
 
-  Stream<List<AdModel>> getAdsStream() async* {
-    while (true) {
-      await loadAds();
-      yield _ads;
-      await Future.delayed(const Duration(seconds: 30));
+  Stream<List<AdModel>> getAdsStream() {
+    // Emit data awal jika sudah ada
+    if (_ads.isNotEmpty && !_adsStreamController.isClosed) {
+      _adsStreamController.add(_ads);
     }
+    return _adsStreamController.stream;
   }
 
   Future<bool> toggleAdStatus(String id, bool isEnabled) async {

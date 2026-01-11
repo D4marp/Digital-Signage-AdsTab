@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/ad_provider.dart';
 import '../../../models/ad_model.dart';
 import '../../../utils/format_helper.dart';
+import '../../../utils/responsive_helper.dart';
 import '../widgets/ad_upload_dialog.dart';
 import '../widgets/ad_edit_dialog.dart';
 
@@ -16,6 +17,8 @@ class AdsTab extends StatefulWidget {
 class _AdsTabState extends State<AdsTab> {
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ad Management'),
@@ -58,18 +61,160 @@ class _AdsTabState extends State<AdsTab> {
           }
 
           final ads = snapshot.data!;
-          return ReorderableListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: ads.length,
-            onReorder: (oldIndex, newIndex) {
-              _handleReorder(ads, oldIndex, newIndex);
-            },
-            itemBuilder: (context, index) {
-              final ad = ads[index];
-              return _buildAdCard(ad, index, key: ValueKey(ad.id));
-            },
-          );
+          
+          // Desktop view - grid
+          if (!isMobile && ResponsiveHelper.isDesktop(context)) {
+            return _buildDesktopView(ads);
+          }
+          
+          // Tablet dan mobile - list
+          return _buildMobileView(ads);
         },
+      ),
+    );
+  }
+
+  Widget _buildDesktopView(List<AdModel> ads) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: 1.2,
+        ),
+        itemCount: ads.length,
+        itemBuilder: (context, index) {
+          final ad = ads[index];
+          return _buildAdGridCard(ad, index);
+        },
+      ),
+    );
+  }
+
+  Widget _buildMobileView(List<AdModel> ads) {
+    return ReorderableListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: ads.length,
+      onReorder: (oldIndex, newIndex) {
+        _handleReorder(ads, oldIndex, newIndex);
+      },
+      itemBuilder: (context, index) {
+        final ad = ads[index];
+        return _buildAdCard(ad, index, key: ValueKey(ad.id));
+      },
+    );
+  }
+
+  Widget _buildAdGridCard(AdModel ad, int index) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thumbnail
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey[200],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: ad.mediaType == 'image'
+                      ? Image.network(
+                          ad.mediaUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.error),
+                        )
+                      : const Center(
+                          child: Icon(Icons.play_circle_outline, size: 40),
+                        ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Title
+            Text(
+              ad.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            
+            // Status chip
+            Wrap(
+              spacing: 8,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: ad.isEnabled ? Colors.green : Colors.grey,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    ad.isEnabled ? 'Active' : 'Inactive',
+                    style: const TextStyle(color: Colors.white, fontSize: 11),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[100],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    ad.mediaType.toUpperCase(),
+                    style: TextStyle(color: Colors.blue[700], fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            
+            // Info
+            Text(
+              '${ad.durationSeconds}s • ${ad.targetLocations.contains('all') ? 'All Locations' : '${ad.targetLocations.length} locations'}',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            
+            // Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: IconButton(
+                    icon: Icon(
+                      ad.isEnabled ? Icons.toggle_on : Icons.toggle_off,
+                      color: ad.isEnabled ? Colors.green : Colors.grey,
+                    ),
+                    onPressed: () => _toggleAdStatus(ad),
+                  ),
+                ),
+                Expanded(
+                  child: IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    onPressed: () => _showEditDialog(ad),
+                  ),
+                ),
+                Expanded(
+                  child: IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () => _confirmDelete(ad),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -203,10 +348,11 @@ class _AdsTabState extends State<AdsTab> {
   Future<void> _showEditDialog(AdModel ad) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AdEditDialog(ad: ad),
+      builder: (dialogContext) => AdEditDialog(ad: ad),
     );
 
     if (result == true && mounted) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Ad updated successfully')),
       );
@@ -221,16 +367,16 @@ class _AdsTabState extends State<AdsTab> {
   Future<void> _confirmDelete(AdModel ad) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Ad'),
         content: Text('Are you sure you want to delete "${ad.title}"?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
           ),
@@ -242,6 +388,7 @@ class _AdsTabState extends State<AdsTab> {
       final adProvider = context.read<AdProvider>();
       await adProvider.deleteAd(ad.id);
       if (mounted) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Ad deleted successfully')),
         );
