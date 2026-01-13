@@ -102,6 +102,7 @@ class AdProvider extends ChangeNotifier {
     String? companyName,
     String? contactInfo,
     String? websiteUrl,
+    List<String>? galleryImages,
   }) async {
     try {
       final data = {
@@ -116,6 +117,7 @@ class AdProvider extends ChangeNotifier {
       if (companyName != null) data['company_name'] = companyName;
       if (contactInfo != null) data['contact_info'] = contactInfo;
       if (websiteUrl != null) data['website_url'] = websiteUrl;
+      if (galleryImages != null) data['gallery_images'] = galleryImages;
       
       final response = await _apiClient.dio.post(
         ApiConfig.ads,
@@ -151,6 +153,7 @@ class AdProvider extends ChangeNotifier {
     String? companyName,
     String? contactInfo,
     String? websiteUrl,
+    List<String>? galleryImages,
   }) async {
     try {
       final data = <String, dynamic>{};
@@ -164,6 +167,7 @@ class AdProvider extends ChangeNotifier {
       if (companyName != null) data['company_name'] = companyName;
       if (contactInfo != null) data['contact_info'] = contactInfo;
       if (websiteUrl != null) data['website_url'] = websiteUrl;
+      if (galleryImages != null) data['gallery_images'] = galleryImages;
 
       final response = await _apiClient.dio.put(
         ApiConfig.adById(id),
@@ -256,5 +260,61 @@ class AdProvider extends ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  // NEW: Track ad view
+  Future<bool> trackAdView(String adId) async {
+    try {
+      await _apiClient.dio.post(
+        '${ApiConfig.ads}/$adId/view',
+      );
+      
+      // Update local ad's total views
+      final index = _ads.indexWhere((ad) => ad.id == adId);
+      if (index != -1) {
+        final ad = _ads[index];
+        _ads[index] = ad.copyWith(totalViews: ad.totalViews + 1);
+        
+        if (!_adsStreamController.isClosed) {
+          _adsStreamController.add(_ads);
+        }
+        notifyListeners();
+      }
+      
+      return true;
+    } on DioException catch (e) {
+      debugPrint('Error tracking ad view: $e');
+      return false;
+    }
+  }
+
+  // NEW: Check company upload limit
+  Future<Map<String, dynamic>?> checkCompanyUploadLimit(String companyName) async {
+    try {
+      final response = await _apiClient.dio.get(
+        '${ApiConfig.ads}/company/check-limit',
+        queryParameters: {'company': companyName},
+      );
+      
+      return response.data as Map<String, dynamic>?;
+    } on DioException catch (e) {
+      debugPrint('Error checking upload limit: $e');
+      return null;
+    }
+  }
+
+  // NEW: Get ads by company with analytics
+  Future<List<Map<String, dynamic>>?> getAdsByCompany(String companyName) async {
+    try {
+      final response = await _apiClient.dio.get(
+        '${ApiConfig.ads}/company/list',
+        queryParameters: {'company': companyName},
+      );
+      
+      return List<Map<String, dynamic>>.from(response.data ?? []);
+    } on DioException catch (e) {
+      debugPrint('Error getting company ads: $e');
+      return null;
+    }
   }
 }

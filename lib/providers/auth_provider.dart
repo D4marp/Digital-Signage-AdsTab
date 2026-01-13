@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/api_client.dart';
 import '../config/api_config.dart';
@@ -63,6 +64,11 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Alias for signIn (for compatibility)
+  Future<bool> login(String email, String password) async {
+    return await signIn(email, password);
+  }
+
   Future<bool> signUp(String email, String password, String displayName) async {
     _isLoading = true;
     _errorMessage = null;
@@ -124,5 +130,55 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  // NEW: Save login credentials locally
+  Future<void> saveCredentials(String email, String password) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('saved_email', email);
+      // Note: Never save plain passwords in production. This is just for demo.
+      // In production, use secure storage.
+      await prefs.setString('saved_password', password);
+      await prefs.setBool('remember_me', true);
+    } catch (e) {
+      debugPrint('Error saving credentials: $e');
+    }
+  }
+
+  // NEW: Get saved credentials
+  Future<Map<String, String>?> getSavedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rememberMe = prefs.getBool('remember_me') ?? false;
+      
+      if (rememberMe) {
+        final email = prefs.getString('saved_email');
+        final password = prefs.getString('saved_password');
+        
+        if (email != null && password != null) {
+          return {
+            'email': email,
+            'password': password,
+          };
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting saved credentials: $e');
+      return null;
+    }
+  }
+
+  // NEW: Clear saved credentials
+  Future<void> clearCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('saved_email');
+      await prefs.remove('saved_password');
+      await prefs.setBool('remember_me', false);
+    } catch (e) {
+      debugPrint('Error clearing credentials: $e');
+    }
   }
 }

@@ -42,6 +42,7 @@ dependencies:
   connectivity_plus: ^5.0.2
   permission_handler: ^11.2.0
   url_launcher: ^6.2.3
+  flutter_dotenv: ^5.1.0
   
   # Carousel & Slideshow
   carousel_slider: ^4.2.1
@@ -52,9 +53,6 @@ dependencies:
   
   # CSV Export
   csv: ^6.0.0
-  
-  # Kiosk Mode (Android)
-  flutter_windowmanager: ^0.2.0
 
 dev_dependencies:
   flutter_test:
@@ -67,3 +65,4 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - .env

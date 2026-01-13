@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"digital-signage-backend/config"
 
@@ -73,11 +74,14 @@ func runMigrations() error {
 			company_name VARCHAR(255),
 			contact_info VARCHAR(255),
 			website_url VARCHAR(500),
+			gallery_images JSON,
+			total_views INT NOT NULL DEFAULT 0,
 			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			INDEX idx_order (order_index),
 			INDEX idx_enabled (is_enabled),
 			INDEX idx_created_by (created_by),
+			INDEX idx_company (company_name),
 			FOREIGN KEY (created_by) REFERENCES users(id)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
@@ -126,8 +130,23 @@ func runMigrations() error {
 
 	for _, migration := range migrations {
 		if _, err := DB.Exec(migration); err != nil {
-			return fmt.Errorf("migration error: %w", err)
+			// Ignore errors from ALTER TABLE (column already exists)
+			if !strings.Contains(err.Error(), "Duplicate column name") &&
+				!strings.Contains(err.Error(), "already exists") {
+				return fmt.Errorf("migration error: %w", err)
+			}
 		}
+	}
+
+	// Add new columns to existing ads table if needed
+	alterStatements := []string{
+		"ALTER TABLE ads ADD COLUMN IF NOT EXISTS gallery_images JSON",
+		"ALTER TABLE ads ADD COLUMN IF NOT EXISTS total_views INT DEFAULT 0",
+		"ALTER TABLE ads ADD INDEX IF NOT EXISTS idx_company (company_name)",
+	}
+
+	for _, stmt := range alterStatements {
+		DB.Exec(stmt) // Ignore errors
 	}
 
 	return nil

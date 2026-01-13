@@ -50,6 +50,9 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			ads.DELETE("/:id", middleware.AuthMiddleware(cfg), adHandler.DeleteAd)           // Protected
 			ads.POST("/upload", middleware.AuthMiddleware(cfg), adHandler.UploadMedia)       // Protected
 			ads.POST("/reorder", middleware.AuthMiddleware(cfg), adHandler.ReorderAds)       // Protected
+			ads.POST("/:id/view", adHandler.TrackAdView)                                     // Public - track views
+			ads.GET("/company/list", adHandler.GetAdsByCompany)                              // Public - get ads by company
+			ads.GET("/company/check-limit", adHandler.CheckCompanyUploadLimit)               // Public - check upload limit
 		}
 
 		// Devices routes

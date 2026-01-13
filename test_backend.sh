@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_URL="http://localhost:8080/api/v1"
+BASE_URL="http://saas.hcm-lab.id/api/v1"
 TOKEN=""
 
 echo "🧪 DIGITAL SIGNAGE BACKEND TEST SUITE"
@@ -26,9 +26,9 @@ echo "-------------------"
 REGISTER_RESPONSE=$(curl -s -X POST "$BASE_URL/auth/register" \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "testadmin@test.com",
-    "password": "Test@123456",
-    "display_name": "Test Admin"
+    "email": "admin@test.com",
+    "password": "admin123",
+    "display_name": "Admin"
   }')
 
 echo "Response: $REGISTER_RESPONSE"

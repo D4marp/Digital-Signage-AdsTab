@@ -32,7 +32,7 @@ class _AdsTabState extends State<AdsTab> {
         ],
       ),
       body: StreamBuilder<List<AdModel>>(
-        stream: context.read<AdProvider>().getAdsStream(),
+        stream: Provider.of<AdProvider>(context, listen: false).getAdsStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

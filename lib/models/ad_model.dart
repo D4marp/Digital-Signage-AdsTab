@@ -1,12 +1,12 @@
 class AdModel {
   final String id;
   final String title;
-  final String mediaUrl;
-  final String mediaType; // 'image', 'video', or 'pdf'
+  final String mediaUrl;                    // Main image untuk tab display
+  final String mediaType;                   // 'image', 'video', or 'pdf'
   final int durationSeconds;
   final int orderIndex;
   final bool isEnabled;
-  final List<String> targetLocations; // 'all' or specific location IDs
+  final List<String> targetLocations;       // 'all' or specific location IDs
   final DateTime createdAt;
   final DateTime updatedAt;
   final String createdBy;
@@ -15,6 +15,8 @@ class AdModel {
   final String? companyName;
   final String? contactInfo;
   final String? websiteUrl;
+  final List<String> galleryImages;         // Semua foto promo untuk detail page
+  final int totalViews;                     // Total views tracking
 
   AdModel({
     required this.id,
@@ -33,6 +35,8 @@ class AdModel {
     this.companyName,
     this.contactInfo,
     this.websiteUrl,
+    this.galleryImages = const [],
+    this.totalViews = 0,
   });
 
   factory AdModel.fromJson(Map<String, dynamic> json) {
@@ -53,6 +57,8 @@ class AdModel {
       companyName: json['company_name'],
       contactInfo: json['contact_info'],
       websiteUrl: json['website_url'],
+      galleryImages: List<String>.from(json['gallery_images'] ?? []),
+      totalViews: json['total_views'] ?? 0,
     );
   }
 
@@ -74,9 +80,10 @@ class AdModel {
       'company_name': companyName,
       'contact_info': contactInfo,
       'website_url': websiteUrl,
+      'gallery_images': galleryImages,
+      'total_views': totalViews,
     };
   }
-
 
   AdModel copyWith({
     String? title,
@@ -92,6 +99,8 @@ class AdModel {
     String? companyName,
     String? contactInfo,
     String? websiteUrl,
+    List<String>? galleryImages,
+    int? totalViews,
   }) {
     return AdModel(
       id: id,
@@ -102,14 +111,16 @@ class AdModel {
       orderIndex: orderIndex ?? this.orderIndex,
       isEnabled: isEnabled ?? this.isEnabled,
       targetLocations: targetLocations ?? this.targetLocations,
-      createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      createdBy: createdBy,
       isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt,
+      createdBy: createdBy,
       description: description ?? this.description,
       companyName: companyName ?? this.companyName,
       contactInfo: contactInfo ?? this.contactInfo,
       websiteUrl: websiteUrl ?? this.websiteUrl,
+      galleryImages: galleryImages ?? this.galleryImages,
+      totalViews: totalViews ?? this.totalViews,
     );
   }
 }

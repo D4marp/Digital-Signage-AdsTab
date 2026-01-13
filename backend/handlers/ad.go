@@ -32,6 +32,7 @@ func (h *AdHandler) GetAds(c *gin.Context) {
 		SELECT id, title, media_url, media_type, duration_seconds, order_index,
 		       is_enabled, target_locations, created_by, is_deleted, 
 		       description, company_name, contact_info, website_url,
+		       COALESCE(gallery_images, '[]'), COALESCE(total_views, 0),
 		       created_at, updated_at
 		FROM ads
 		WHERE is_deleted = false
@@ -58,7 +59,7 @@ func (h *AdHandler) GetAds(c *gin.Context) {
 			&ad.ID, &ad.Title, &ad.MediaURL, &ad.MediaType, &ad.DurationSeconds,
 			&ad.OrderIndex, &ad.IsEnabled, &ad.TargetLocations, &ad.CreatedBy,
 			&ad.IsDeleted, &ad.Description, &ad.CompanyName, &ad.ContactInfo,
-			&ad.WebsiteURL, &ad.CreatedAt, &ad.UpdatedAt,
+			&ad.WebsiteURL, &ad.GalleryImages, &ad.TotalViews, &ad.CreatedAt, &ad.UpdatedAt,
 		)
 		if err != nil {
 			continue
@@ -98,13 +99,14 @@ func (h *AdHandler) GetAdByID(c *gin.Context) {
 		SELECT id, title, media_url, media_type, duration_seconds, order_index,
 		       is_enabled, target_locations, created_by, is_deleted,
 		       description, company_name, contact_info, website_url,
+		       COALESCE(gallery_images, '[]'), COALESCE(total_views, 0),
 		       created_at, updated_at
 		FROM ads WHERE id = ? AND is_deleted = false
 	`, id).Scan(
 		&ad.ID, &ad.Title, &ad.MediaURL, &ad.MediaType, &ad.DurationSeconds,
 		&ad.OrderIndex, &ad.IsEnabled, &ad.TargetLocations, &ad.CreatedBy,
 		&ad.IsDeleted, &ad.Description, &ad.CompanyName, &ad.ContactInfo,
-		&ad.WebsiteURL, &ad.CreatedAt, &ad.UpdatedAt,
+		&ad.WebsiteURL, &ad.GalleryImages, &ad.TotalViews, &ad.CreatedAt, &ad.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Ad not found"})
@@ -142,15 +144,22 @@ func (h *AdHandler) CreateAd(c *gin.Context) {
 		return
 	}
 
+	// Convert gallery images to JSON
+	galleryImagesJSON, err := json.Marshal(req.GalleryImages)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid gallery images"})
+		return
+	}
+
 	// Insert ad
 	adID := uuid.New().String()
 	_, err = database.DB.Exec(`
 		INSERT INTO ads (id, title, media_url, media_type, duration_seconds, order_index,
 		                 is_enabled, target_locations, created_by, description,
-		                 company_name, contact_info, website_url)
-		VALUES (?, ?, ?, ?, ?, ?, true, ?, ?, ?, ?, ?, ?)
+		                 company_name, contact_info, website_url, gallery_images, total_views)
+		VALUES (?, ?, ?, ?, ?, ?, true, ?, ?, ?, ?, ?, ?, ?, 0)
 	`, adID, req.Title, req.MediaURL, req.MediaType, req.DurationSeconds, maxOrder+1,
-		targetLocationsJSON, userID, req.Description, req.CompanyName, req.ContactInfo, req.WebsiteURL)
+		targetLocationsJSON, userID, req.Description, req.CompanyName, req.ContactInfo, req.WebsiteURL, galleryImagesJSON)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create ad", "details": err.Error()})
 		return
@@ -162,13 +171,14 @@ func (h *AdHandler) CreateAd(c *gin.Context) {
 		SELECT id, title, media_url, media_type, duration_seconds, order_index,
 		       is_enabled, target_locations, created_by, is_deleted,
 		       description, company_name, contact_info, website_url,
+		       COALESCE(gallery_images, '[]'), COALESCE(total_views, 0),
 		       created_at, updated_at
 		FROM ads WHERE id = ?
 	`, adID).Scan(
 		&ad.ID, &ad.Title, &ad.MediaURL, &ad.MediaType, &ad.DurationSeconds,
 		&ad.OrderIndex, &ad.IsEnabled, &ad.TargetLocations, &ad.CreatedBy,
 		&ad.IsDeleted, &ad.Description, &ad.CompanyName, &ad.ContactInfo,
-		&ad.WebsiteURL, &ad.CreatedAt, &ad.UpdatedAt,
+		&ad.WebsiteURL, &ad.GalleryImages, &ad.TotalViews, &ad.CreatedAt, &ad.UpdatedAt,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve created ad"})
@@ -236,6 +246,11 @@ func (h *AdHandler) UpdateAd(c *gin.Context) {
 		updates = append(updates, "order_index = ?")
 		args = append(args, *req.OrderIndex)
 	}
+	if req.GalleryImages != nil {
+		galleryImagesJSON, _ := json.Marshal(req.GalleryImages)
+		updates = append(updates, "gallery_images = ?")
+		args = append(args, galleryImagesJSON)
+	}
 
 	if len(updates) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No fields to update"})
@@ -263,13 +278,14 @@ func (h *AdHandler) UpdateAd(c *gin.Context) {
 		SELECT id, title, media_url, media_type, duration_seconds, order_index,
 		       is_enabled, target_locations, created_by, is_deleted,
 		       description, company_name, contact_info, website_url,
+		       COALESCE(gallery_images, '[]'), COALESCE(total_views, 0),
 		       created_at, updated_at
 		FROM ads WHERE id = ?
 	`, id).Scan(
 		&ad.ID, &ad.Title, &ad.MediaURL, &ad.MediaType, &ad.DurationSeconds,
 		&ad.OrderIndex, &ad.IsEnabled, &ad.TargetLocations, &ad.CreatedBy,
 		&ad.IsDeleted, &ad.Description, &ad.CompanyName, &ad.ContactInfo,
-		&ad.WebsiteURL, &ad.CreatedAt, &ad.UpdatedAt,
+		&ad.WebsiteURL, &ad.GalleryImages, &ad.TotalViews, &ad.CreatedAt, &ad.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Ad not found"})
@@ -391,4 +407,109 @@ func (h *AdHandler) ReorderAds(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Ads reordered successfully"})
+}
+// TrackAdView - mencatat view count untuk setiap ad
+func (h *AdHandler) TrackAdView(c *gin.Context) {
+	id := c.Param("id")
+
+	// Increment view count
+	_, err := database.DB.Exec(`
+		UPDATE ads SET total_views = total_views + 1
+		WHERE id = ? AND is_deleted = false
+	`, id)
+	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to track view"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "View tracked"})
+}
+
+// GetAdsByCompany - get semua ads dari satu perusahaan untuk tracking total views
+func (h *AdHandler) GetAdsByCompany(c *gin.Context) {
+	companyName := c.Query("company")
+	if companyName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Company name required"})
+		return
+	}
+
+	rows, err := database.DB.Query(`
+		SELECT id, title, media_url, media_type, duration_seconds, order_index,
+		       is_enabled, target_locations, created_by, is_deleted,
+		       description, company_name, contact_info, website_url,
+		       COALESCE(gallery_images, '[]'), COALESCE(total_views, 0),
+		       created_at, updated_at
+		FROM ads
+		WHERE company_name = ? AND is_deleted = false
+		ORDER BY order_index ASC
+	`, companyName)
+	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch ads"})
+		return
+	}
+	defer rows.Close()
+
+	ads := []models.Ad{}
+	totalViews := 0
+
+	for rows.Next() {
+		var ad models.Ad
+		err := rows.Scan(
+			&ad.ID, &ad.Title, &ad.MediaURL, &ad.MediaType, &ad.DurationSeconds,
+			&ad.OrderIndex, &ad.IsEnabled, &ad.TargetLocations, &ad.CreatedBy,
+			&ad.IsDeleted, &ad.Description, &ad.CompanyName, &ad.ContactInfo,
+			&ad.WebsiteURL, &ad.GalleryImages, &ad.TotalViews, &ad.CreatedAt, &ad.UpdatedAt,
+		)
+		if err != nil {
+			continue
+		}
+		ads = append(ads, ad)
+		totalViews += ad.TotalViews
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"company":     companyName,
+		"ads_count":   len(ads),
+		"total_views": totalViews,
+		"ads":         ads,
+	})
+}
+
+// CheckCompanyUploadLimit - check jatah upload untuk perusahaan (max 2 images per company)
+func (h *AdHandler) CheckCompanyUploadLimit(c *gin.Context) {
+	companyName := c.Query("company")
+	if companyName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Company name required"})
+		return
+	}
+
+	const MAX_ADS_PER_COMPANY = 2
+
+	var count int
+	err := database.DB.QueryRow(`
+		SELECT COUNT(*) FROM ads 
+		WHERE company_name = ? AND is_deleted = false
+	`, companyName).Scan(&count)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check limit"})
+		return
+	}
+
+	canUpload := count < MAX_ADS_PER_COMPANY
+	remaining := MAX_ADS_PER_COMPANY - count
+
+	if remaining < 0 {
+		remaining = 0
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"company":           companyName,
+		"current_ads":       count,
+		"max_ads":           MAX_ADS_PER_COMPANY,
+		"can_upload":        canUpload,
+		"remaining_quota":   remaining,
+	})
 }
