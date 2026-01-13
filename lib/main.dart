@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,11 +11,20 @@ import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
 import 'services/api_client.dart';
 
+// Environment mode: 'local' atau 'production'
+const String appEnvironment = String.fromEnvironment('ENV', defaultValue: 'local');
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Load environment variables
-  await dotenv.load(fileName: '.env');
+  // Load environment variables based on environment mode
+  final envFile = appEnvironment == 'production' ? '.env.production' : '.env.local';
+  await dotenv.load(fileName: envFile);
+  
+  if (kDebugMode) {
+    print('🚀 Running in $appEnvironment mode');
+    print('📡 API URL: ${dotenv.env['API_BASE_URL']}');
+  }
   
   // Initialize API client
   await ApiClient.init();
