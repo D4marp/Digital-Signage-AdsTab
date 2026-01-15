@@ -15,6 +15,9 @@ class ApiConfig {
   static String adById(String id) => '$baseUrl/ads/$id';
   static String get uploadMedia => '$baseUrl/ads/upload';
   static String get reorderAds => '$baseUrl/ads/reorder';
+  static String trackAdView(String id) => '$baseUrl/ads/$id/view';
+  static String getAdsByCompany(String company) => '$baseUrl/ads/company/list?company=$company';
+  static String checkCompanyUploadLimit(String company) => '$baseUrl/ads/company/check-limit?company=$company';
   
   // Devices endpoints
   static String get devices => '$baseUrl/devices';

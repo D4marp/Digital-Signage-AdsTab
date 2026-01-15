@@ -1,6 +1,7 @@
 #!/bin/bash
 
-BASE_URL="http://saas.hcm-lab.id/api/v1"
+# BASE_URL="http://saas.hcm-lab.id/api/v1"
+BASE_URL="http://localhost:8080/api/v1"
 TOKEN=""
 
 echo "🧪 DIGITAL SIGNAGE BACKEND TEST SUITE"
@@ -88,73 +89,124 @@ else
 fi
 echo ""
 
-# Test 5: Create Ad
-echo "5️⃣  TEST CREATE AD"
-echo "-------------------"
+# Test 5: Check Company Upload Limit
+echo "5️⃣  TEST CHECK UPLOAD LIMIT"
+echo "----------------------------"
+CHECK_LIMIT=$(curl -s -X GET "$BASE_URL/ads/company/check-limit?company=Test%20Company" \
+  -H "Authorization: Bearer $TOKEN")
+
+echo "Response: $CHECK_LIMIT"
+if echo "$CHECK_LIMIT" | grep -q '"can_upload"'; then
+  success "Check upload limit successful"
+else
+  error "Check upload limit failed"
+fi
+echo ""
+
+# Test 6: Create Ad with Gallery Images
+echo "6️⃣  TEST CREATE AD WITH GALLERY"
+echo "------------------------------"
 CREATE_AD=$(curl -s -X POST "$BASE_URL/ads" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Test Ad",
-    "media_url": "https://example.com/image.jpg",
+    "title": "Test Ad with Gallery",
+    "media_url": "https://example.com/main-image.jpg",
     "media_type": "image",
-    "duration_seconds": 5,
+    "duration_seconds": 10,
     "target_locations": ["all"],
-    "description": "Test advertisement",
+    "description": "Test advertisement with multiple images",
     "company_name": "Test Company",
     "contact_info": "contact@test.com",
-    "website_url": "https://test.com"
+    "website_url": "https://test.com",
+    "gallery_images": [
+      "https://example.com/promo1.jpg",
+      "https://example.com/promo2.jpg",
+      "https://example.com/promo3.jpg"
+    ]
   }')
 
 echo "Response: $CREATE_AD"
 AD_ID=$(echo "$CREATE_AD" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
 if [ ! -z "$AD_ID" ]; then
-  success "Create ad successful, AD ID: $AD_ID"
+  success "Create ad with gallery successful, AD ID: $AD_ID"
 else
-  error "Create ad failed"
+  error "Create ad with gallery failed"
   echo "Full response: $CREATE_AD"
 fi
 echo ""
 
-# Test 6: Get Ad by ID
+# Test 7: Track Ad View
 if [ ! -z "$AD_ID" ]; then
-echo "6️⃣  TEST GET AD BY ID"
+echo "7️⃣  TEST TRACK AD VIEW"
 echo "---------------------"
-GET_AD=$(curl -s -X GET "$BASE_URL/ads/$AD_ID")
+VIEW_RESPONSE=$(curl -s -X POST "$BASE_URL/ads/$AD_ID/view" \
+  -H "Content-Type: application/json" \
+  -d '{}')
 
-echo "Response: $GET_AD"
-if echo "$GET_AD" | grep -q '"title"'; then
-  success "Get ad by ID successful"
+echo "Response: $VIEW_RESPONSE"
+if echo "$VIEW_RESPONSE" | grep -q '"message"'; then
+  success "Track ad view successful"
 else
-  error "Get ad by ID failed"
+  error "Track ad view failed"
 fi
 echo ""
 fi
 
-# Test 7: Update Ad
+# Test 8: Get Ad by ID (with gallery and total_views)
 if [ ! -z "$AD_ID" ]; then
-echo "7️⃣  TEST UPDATE AD"
-echo "-------------------"
+echo "8️⃣  TEST GET AD BY ID (WITH GALLERY)"
+echo "-----------------------------------"
+GET_AD=$(curl -s -X GET "$BASE_URL/ads/$AD_ID")
+
+echo "Response: $GET_AD"
+if echo "$GET_AD" | grep -q '"gallery_images"' && echo "$GET_AD" | grep -q '"total_views"'; then
+  success "Get ad with gallery successful"
+else
+  error "Get ad with gallery failed or missing fields"
+fi
+echo ""
+fi
+
+# Test 9: Update Ad Gallery Images
+if [ ! -z "$AD_ID" ]; then
+echo "9️⃣  TEST UPDATE AD GALLERY"
+echo "-------------------------"
 UPDATE_AD=$(curl -s -X PUT "$BASE_URL/ads/$AD_ID" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Updated Test Ad",
-    "is_enabled": true,
-    "duration_seconds": 10
+    "gallery_images": [
+      "https://example.com/updated-promo1.jpg",
+      "https://example.com/updated-promo2.jpg"
+    ]
   }')
 
 echo "Response: $UPDATE_AD"
-if echo "$UPDATE_AD" | grep -q '"title"'; then
-  success "Update ad successful"
+if echo "$UPDATE_AD" | grep -q '"gallery_images"'; then
+  success "Update ad gallery successful"
 else
-  error "Update ad failed"
+  error "Update ad gallery failed"
 fi
 echo ""
 fi
 
-# Test 8: Register Device
-echo "8️⃣  TEST REGISTER DEVICE"
+# Test 10: Get Ads by Company with Analytics
+echo "🔟 TEST GET ADS BY COMPANY (ANALYTICS)"
+echo "------------------------------------"
+COMPANY_ADS=$(curl -s -X GET "$BASE_URL/ads/company/list?company=Test%20Company" \
+  -H "Authorization: Bearer $TOKEN")
+
+echo "Response: $COMPANY_ADS"
+if echo "$COMPANY_ADS" | grep -q '"ads_count"' || echo "$COMPANY_ADS" | grep -q '"total_views"'; then
+  success "Get company ads analytics successful"
+else
+  error "Get company ads analytics failed"
+fi
+echo ""
+
+# Test 11: Register Device
+echo "1️⃣1️⃣  TEST REGISTER DEVICE"
 echo "------------------------"
 DEVICE_RESPONSE=$(curl -s -X POST "$BASE_URL/devices/register" \
   -H "Content-Type: application/json" \
@@ -174,8 +226,8 @@ else
 fi
 echo ""
 
-# Test 9: Get all devices (protected)
-echo "9️⃣  TEST GET DEVICES (PROTECTED)"
+# Test 12: Get all devices (protected)
+echo "1️⃣2️⃣  TEST GET DEVICES (PROTECTED)"
 echo "--------------------------------"
 GET_DEVICES=$(curl -s -X GET "$BASE_URL/devices" \
   -H "Authorization: Bearer $TOKEN")
@@ -188,9 +240,9 @@ else
 fi
 echo ""
 
-# Test 10: Device heartbeat (public)
+# Test 13: Device heartbeat (public)
 if [ ! -z "$DEVICE_ID" ]; then
-echo "🔟 TEST DEVICE HEARTBEAT"
+echo "1️⃣3️⃣ TEST DEVICE HEARTBEAT"
 echo "------------------------"
 HEARTBEAT=$(curl -s -X POST "$BASE_URL/devices/$DEVICE_ID/heartbeat" \
   -H "Content-Type: application/json" \
@@ -207,9 +259,9 @@ fi
 echo ""
 fi
 
-# Test 11: Create impression (public)
+# Test 14: Create impression (public)
 if [ ! -z "$AD_ID" ] && [ ! -z "$DEVICE_ID" ]; then
-echo "1️⃣1️⃣  TEST CREATE IMPRESSION"
+echo "1️⃣4️⃣  TEST CREATE IMPRESSION"
 echo "----------------------------"
 IMPRESSION=$(curl -s -X POST "$BASE_URL/analytics/impressions" \
   -H "Content-Type: application/json" \
@@ -228,8 +280,8 @@ fi
 echo ""
 fi
 
-# Test 12: Get analytics (protected)
-echo "1️⃣2️⃣  TEST GET ANALYTICS"
+# Test 15: Get analytics (protected)
+echo "1️⃣5️⃣  TEST GET ANALYTICS"
 echo "------------------------"
 ANALYTICS=$(curl -s -X GET "$BASE_URL/analytics" \
   -H "Authorization: Bearer $TOKEN")
@@ -242,8 +294,8 @@ else
 fi
 echo ""
 
-# Test 13: Get dashboard stats (protected)
-echo "1️⃣3️⃣  TEST DASHBOARD STATS"
+# Test 16: Get dashboard stats (protected)
+echo "1️⃣6️⃣  TEST DASHBOARD STATS"
 echo "-------------------------"
 DASHBOARD=$(curl -s -X GET "$BASE_URL/analytics/dashboard" \
   -H "Authorization: Bearer $TOKEN")
@@ -256,9 +308,9 @@ else
 fi
 echo ""
 
-# Test 14: Delete Ad
+# Test 17: Delete Ad
 if [ ! -z "$AD_ID" ]; then
-echo "1️⃣4️⃣  TEST DELETE AD"
+echo "1️⃣7️⃣  TEST DELETE AD"
 echo "-------------------"
 DELETE_AD=$(curl -s -X DELETE "$BASE_URL/ads/$AD_ID" \
   -H "Authorization: Bearer $TOKEN")

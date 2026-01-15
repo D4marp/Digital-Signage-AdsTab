@@ -43,28 +43,34 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		// Ads routes
 		ads := v1.Group("/ads")
 		{
-			ads.GET("", adHandler.GetAds)                                                    // Public - can filter by location
-			ads.GET("/:id", adHandler.GetAdByID)                                             // Public
+			// Non-parameterized routes FIRST
+			ads.GET("", adHandler.GetAds)                                                    // Public
 			ads.POST("", middleware.AuthMiddleware(cfg), adHandler.CreateAd)                 // Protected
-			ads.PUT("/:id", middleware.AuthMiddleware(cfg), adHandler.UpdateAd)              // Protected
-			ads.DELETE("/:id", middleware.AuthMiddleware(cfg), adHandler.DeleteAd)           // Protected
 			ads.POST("/upload", middleware.AuthMiddleware(cfg), adHandler.UploadMedia)       // Protected
 			ads.POST("/reorder", middleware.AuthMiddleware(cfg), adHandler.ReorderAds)       // Protected
-			ads.POST("/:id/view", adHandler.TrackAdView)                                     // Public - track views
-			ads.GET("/company/list", adHandler.GetAdsByCompany)                              // Public - get ads by company
-			ads.GET("/company/check-limit", adHandler.CheckCompanyUploadLimit)               // Public - check upload limit
+			ads.GET("/company/list", adHandler.GetAdsByCompany)                              // Public
+			ads.GET("/company/check-limit", adHandler.CheckCompanyUploadLimit)               // Public
+			
+			// Parameterized routes AFTER
+			ads.GET("/:id", adHandler.GetAdByID)                                             // Public
+			ads.POST("/:id/view", adHandler.TrackAdView)                                     // Public
+			ads.PUT("/:id", middleware.AuthMiddleware(cfg), adHandler.UpdateAd)              // Protected
+			ads.DELETE("/:id", middleware.AuthMiddleware(cfg), adHandler.DeleteAd)           // Protected
 		}
 
 		// Devices routes
 		devices := v1.Group("/devices")
 		{
+			// Non-parameterized routes FIRST
+			devices.POST("/register", deviceHandler.RegisterDevice)                          // Public
+			
+			// Parameterized routes AFTER
 			devices.GET("", middleware.AuthMiddleware(cfg), deviceHandler.GetDevices)        // Protected
 			devices.GET("/:id", middleware.AuthMiddleware(cfg), deviceHandler.GetDeviceByID) // Protected
-			devices.POST("/register", deviceHandler.RegisterDevice)                          // Public - for device registration
 			devices.PUT("/:id", middleware.AuthMiddleware(cfg), deviceHandler.UpdateDevice)  // Protected
 			devices.DELETE("/:id", middleware.AuthMiddleware(cfg), deviceHandler.DeleteDevice) // Protected
-			devices.POST("/:id/heartbeat", deviceHandler.Heartbeat)                          // Public - for device heartbeat
-			devices.POST("/:id/increment-views", deviceHandler.IncrementViews)               // Public - for tracking
+			devices.POST("/:id/heartbeat", deviceHandler.Heartbeat)                          // Public
+			devices.POST("/:id/increment-views", deviceHandler.IncrementViews)               // Public
 		}
 
 		// Analytics routes

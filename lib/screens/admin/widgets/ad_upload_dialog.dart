@@ -24,6 +24,7 @@ class _AdUploadDialogState extends State<AdUploadDialog> {
   File? _selectedFile;
   String? _mediaType;
   bool _isUploading = false;
+  List<File> _galleryFiles = [];
 
   @override
   void dispose() {
@@ -58,10 +59,30 @@ class _AdUploadDialogState extends State<AdUploadDialog> {
     }
   }
 
+  Future<void> _pickGalleryImages() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png'],
+      allowMultiple: true,
+    );
+
+    if (result != null) {
+      setState(() {
+        _galleryFiles = result.files.map((f) => File(f.path!)).toList();
+      });
+    }
+  }
+
+  void _removeGalleryImage(int index) {
+    setState(() {
+      _galleryFiles.removeAt(index);
+    });
+  }
+
   Future<void> _handleUpload() async {
     if (!_formKey.currentState!.validate() || _selectedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a file')),
+        const SnackBar(content: Text('Please select a main image/video/pdf')),
       );
       return;
     }
@@ -72,6 +93,15 @@ class _AdUploadDialogState extends State<AdUploadDialog> {
       final adProvider = context.read<AdProvider>();
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${_selectedFile!.path.split('/').last}';
       final mediaUrl = await adProvider.uploadMedia(_selectedFile!, fileName);
+
+      // Upload gallery images
+      List<String> galleryUrls = [];
+      for (var i = 0; i < _galleryFiles.length; i++) {
+        final file = _galleryFiles[i];
+        final galleryFileName = 'gallery_${DateTime.now().millisecondsSinceEpoch}_${i}_${file.path.split('/').last}';
+        final galleryUrl = await adProvider.uploadMedia(file, galleryFileName);
+        galleryUrls.add(galleryUrl);
+      }
 
       final success = await adProvider.createAd(
         title: _titleController.text.trim(),
@@ -91,6 +121,7 @@ class _AdUploadDialogState extends State<AdUploadDialog> {
         websiteUrl: _websiteUrlController.text.trim().isEmpty 
             ? null 
             : _websiteUrlController.text.trim(),
+        galleryImages: galleryUrls.isNotEmpty ? galleryUrls : null,
       );
 
       if (mounted) {
@@ -282,6 +313,89 @@ class _AdUploadDialogState extends State<AdUploadDialog> {
                                   });
                                 },
                               ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Gallery Images (Optional)
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Gallery Images (Optional)',
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  ElevatedButton.icon(
+                                    onPressed: _isUploading ? null : _pickGalleryImages,
+                                    icon: const Icon(Icons.add_photo_alternate),
+                                    label: const Text('Add Images'),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              if (_galleryFiles.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 24),
+                                  child: Center(
+                                    child: Text(
+                                      'No gallery images selected\n(Up to 5 promotional images)',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
+                                  ),
+                                )
+                              else
+                                Column(
+                                  children: [
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: List.generate(_galleryFiles.length, (index) {
+                                        return Stack(
+                                          children: [
+                                            Container(
+                                              width: 100,
+                                              height: 100,
+                                              decoration: BoxDecoration(
+                                                border: Border.all(color: Colors.grey),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: Image.file(
+                                                  _galleryFiles[index],
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ),
+                                            Positioned(
+                                              top: -8,
+                                              right: -8,
+                                              child: IconButton(
+                                                onPressed: () => _removeGalleryImage(index),
+                                                icon: const Icon(Icons.cancel, color: Colors.red),
+                                                iconSize: 24,
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      }),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${_galleryFiles.length} image(s) selected',
+                                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                    ),
+                                  ],
+                                ),
                             ],
                           ),
                         ),
