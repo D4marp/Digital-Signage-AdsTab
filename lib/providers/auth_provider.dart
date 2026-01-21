@@ -41,6 +41,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('🔐 Attempting login with email: $email');
       final response = await _apiClient.dio.post(
         ApiConfig.login,
         data: {
@@ -49,16 +50,36 @@ class AuthProvider extends ChangeNotifier {
         },
       );
 
+      debugPrint('✅ Login response: ${response.data}');
+      
       final token = response.data['token'];
+      if (token == null) {
+        throw Exception('Token not found in response');
+      }
+      
       await _apiClient.setAuthToken(token);
       
-      _userModel = UserModel.fromJson(response.data['user']);
+      // Parse user data - handle both nested and direct user object
+      final userData = response.data['user'] ?? response.data;
+      _userModel = UserModel.fromJson(userData);
+      
+      debugPrint('✅ User logged in: ${_userModel?.email}');
       _isLoading = false;
       notifyListeners();
       return true;
     } on DioException catch (e) {
       _isLoading = false;
-      _errorMessage = e.response?.data['error'] ?? 'Login failed';
+      final errorMsg = e.response?.data['error'] ?? 
+                       e.response?.data?.toString() ?? 
+                       'Login failed: ${e.message}';
+      _errorMessage = errorMsg;
+      debugPrint('❌ Login error: $errorMsg');
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Login failed: $e';
+      debugPrint('❌ Unexpected error: $e');
       notifyListeners();
       return false;
     }
@@ -75,6 +96,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('📝 Attempting registration with email: $email');
       final response = await _apiClient.dio.post(
         ApiConfig.register,
         data: {
@@ -84,16 +106,36 @@ class AuthProvider extends ChangeNotifier {
         },
       );
 
+      debugPrint('✅ Registration response: ${response.data}');
+      
       final token = response.data['token'];
+      if (token == null) {
+        throw Exception('Token not found in response');
+      }
+      
       await _apiClient.setAuthToken(token);
       
-      _userModel = UserModel.fromJson(response.data['user']);
+      // Parse user data - handle both nested and direct user object
+      final userData = response.data['user'] ?? response.data;
+      _userModel = UserModel.fromJson(userData);
+      
+      debugPrint('✅ User registered: ${_userModel?.email}');
       _isLoading = false;
       notifyListeners();
       return true;
     } on DioException catch (e) {
       _isLoading = false;
-      _errorMessage = e.response?.data['error'] ?? 'Registration failed';
+      final errorMsg = e.response?.data['error'] ?? 
+                       e.response?.data?.toString() ?? 
+                       'Registration failed: ${e.message}';
+      _errorMessage = errorMsg;
+      debugPrint('❌ Registration error: $errorMsg');
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Registration failed: $e';
+      debugPrint('❌ Unexpected error: $e');
       notifyListeners();
       return false;
     }

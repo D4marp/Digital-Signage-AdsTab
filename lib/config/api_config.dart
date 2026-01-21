@@ -1,8 +1,22 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // Use environment variable for base URL
-  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://localhost:8080/api/v1';
+  // Use environment variable for base URL with fallback
+  static String get baseUrl {
+    try {
+      final url = dotenv.env['API_BASE_URL'];
+      if (kDebugMode) {
+        print('📡 [ApiConfig] baseUrl: $url');
+      }
+      return url ?? 'http://saas.hcm-lab.id/api/v1';
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ [ApiConfig] Error getting baseUrl: $e, using fallback');
+      }
+      return 'http://saas.hcm-lab.id/api/v1';
+    }
+  }
   
   // Auth endpoints
   static String get login => '$baseUrl/auth/login';

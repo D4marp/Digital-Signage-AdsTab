@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../utils/responsive_helper.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
+import '../admin/admin_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -74,7 +75,17 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
-      Navigator.of(context).pushReplacementNamed('/home');
+      // Try named route first, fallback to direct navigation
+      try {
+        Navigator.of(context).pushReplacementNamed('/home');
+      } catch (_) {
+        // Fallback jika named route tidak ada
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const AdminHomeScreen(),
+          ),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

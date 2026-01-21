@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../../models/ad_model.dart';
 
 class AdDetailDialog extends StatefulWidget {
@@ -307,30 +308,61 @@ class _AdDetailDialogState extends State<AdDetailDialog> {
                       const SizedBox(height: 24),
                     ],
 
-                    // Total Views
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.cyan.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.cyan, width: 2),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.visibility, color: Colors.cyan, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Total Penayangan: ${widget.ad.totalViews}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.cyan,
-                            ),
+                    // QR Code Section
+                    if (widget.ad.websiteUrl != null &&
+                        widget.ad.websiteUrl!.isNotEmpty) ...[
+                      Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Scan untuk Kunjungi',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.grey[300]!,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: QrImageView(
+                                  data: widget.ad.websiteUrl!,
+                                  version: QrVersions.auto,
+                                  size: 180.0,
+                                  gapless: false,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              SelectableText(
+                                widget.ad.websiteUrl!,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.blue,
+                                  decoration: TextDecoration.underline,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
+                    ],
 
                     // Company Name
                     if (widget.ad.companyName != null &&

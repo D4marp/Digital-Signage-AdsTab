@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'dart:io';
 import 'dart:async';
@@ -283,17 +284,33 @@ class AdProvider extends ChangeNotifier {
       
       return true;
     } on DioException catch (e) {
-      debugPrint('Error tracking ad view: $e');
+      // Silent fail for view tracking - app should continue working
+      if (kDebugMode) {
+        debugPrint('⚠️ View tracking failed (non-critical): ${e.response?.statusCode} ${e.message}');
+      }
+      
+      // Still update local counter even if API fails
+      final index = _ads.indexWhere((ad) => ad.id == adId);
+      if (index != -1) {
+        final ad = _ads[index];
+        _ads[index] = ad.copyWith(totalViews: ad.totalViews + 1);
+        
+        if (!_adsStreamController.isClosed) {
+          _adsStreamController.add(_ads);
+        }
+        notifyListeners();
+      }
+      
       return false;
     }
   }
 
   // NEW: Check company upload limit
+  // Returns: {company, current_ads, max_ads, can_upload, remaining_quota}
   Future<Map<String, dynamic>?> checkCompanyUploadLimit(String companyName) async {
     try {
       final response = await _apiClient.dio.get(
-        '${ApiConfig.ads}/company/check-limit',
-        queryParameters: {'company': companyName},
+        ApiConfig.checkCompanyUploadLimit(companyName),
       );
       
       return response.data as Map<String, dynamic>?;
@@ -304,14 +321,14 @@ class AdProvider extends ChangeNotifier {
   }
 
   // NEW: Get ads by company with analytics
-  Future<List<Map<String, dynamic>>?> getAdsByCompany(String companyName) async {
+  // Returns: {company, ads_count, total_views, ads[]}
+  Future<Map<String, dynamic>?> getAdsByCompany(String companyName) async {
     try {
       final response = await _apiClient.dio.get(
-        '${ApiConfig.ads}/company/list',
-        queryParameters: {'company': companyName},
+        ApiConfig.getAdsByCompany(companyName),
       );
       
-      return List<Map<String, dynamic>>.from(response.data ?? []);
+      return response.data as Map<String, dynamic>?;
     } on DioException catch (e) {
       debugPrint('Error getting company ads: $e');
       return null;

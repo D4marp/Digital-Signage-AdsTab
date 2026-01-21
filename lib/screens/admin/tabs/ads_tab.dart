@@ -4,8 +4,9 @@ import '../../../providers/ad_provider.dart';
 import '../../../models/ad_model.dart';
 import '../../../utils/format_helper.dart';
 import '../../../utils/responsive_helper.dart';
-import '../widgets/ad_upload_dialog.dart';
-import '../widgets/ad_edit_dialog.dart';
+import '../ad_upload_screen.dart';
+import '../ad_edit_screen.dart';
+
 
 class AdsTab extends StatefulWidget {
   const AdsTab({super.key});
@@ -333,9 +334,11 @@ class _AdsTabState extends State<AdsTab> {
   }
 
   Future<void> _showUploadDialog() async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => const AdUploadDialog(),
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdUploadScreen(),
+      ),
     );
 
     if (result == true && mounted) {
@@ -346,9 +349,11 @@ class _AdsTabState extends State<AdsTab> {
   }
 
   Future<void> _showEditDialog(AdModel ad) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AdEditDialog(ad: ad),
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdEditScreen(ad: ad),
+      ),
     );
 
     if (result == true && mounted) {

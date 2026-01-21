@@ -11,31 +11,74 @@ import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
 import 'services/api_client.dart';
 
-// Environment mode: 'local' atau 'production'
-const String appEnvironment = String.fromEnvironment('ENV', defaultValue: 'local');
-
-void main() async {
+Future<void> initializeApp() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Load environment variables based on environment mode
-  final envFile = appEnvironment == 'production' ? '.env.production' : '.env.local';
-  await dotenv.load(fileName: envFile);
-  
   if (kDebugMode) {
-    print('🚀 Running in $appEnvironment mode');
-    print('📡 API URL: ${dotenv.env['API_BASE_URL']}');
+    print('🚀 [INIT] Starting initialization...');
   }
   
-  // Initialize API client
-  await ApiClient.init();
+  try {
+    // Load environment variables from .env file FIRST and wait
+    if (kDebugMode) {
+      print('🚀 [INIT] Loading .env file...');
+    }
+    await dotenv.load(fileName: '.env');
+    
+    // Add small delay to ensure dotenv is fully initialized
+    await Future.delayed(const Duration(milliseconds: 100));
+    
+    if (kDebugMode) {
+      print('✅ [INIT] .env loaded successfully');
+      print('📡 [INIT] API URL: ${dotenv.env['API_BASE_URL'] ?? 'NOT SET'}');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('❌ [INIT] Error loading .env: $e');
+    }
+  }
   
-  // Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-    DeviceOrientation.portraitUp,
-  ]);
+  try {
+    // Initialize API client AFTER dotenv is loaded
+    if (kDebugMode) {
+      print('🚀 [INIT] Initializing ApiClient...');
+    }
+    await ApiClient.init();
+    if (kDebugMode) {
+      print('✅ [INIT] ApiClient initialized');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('❌ [INIT] Error initializing ApiClient: $e');
+    }
+  }
   
+  try {
+    // Set preferred orientations
+    if (kDebugMode) {
+      print('🚀 [INIT] Setting preferred orientations...');
+    }
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.portraitUp,
+    ]);
+    if (kDebugMode) {
+      print('✅ [INIT] Orientations set');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('❌ [INIT] Error setting orientations: $e');
+    }
+  }
+}
+
+void main() async {
+  await initializeApp();
+  
+  if (kDebugMode) {
+    print('🚀 [MAIN] Running app...');
+  }
   runApp(const MyApp());
 }
 
@@ -46,10 +89,30 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => AdProvider()),
-        ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
-        ChangeNotifierProvider(create: (_) => DeviceProvider()),
+        ChangeNotifierProvider(create: (_) {
+          if (kDebugMode) {
+            print('✅ [PROVIDERS] Creating AuthProvider');
+          }
+          return AuthProvider();
+        }),
+        ChangeNotifierProvider(create: (_) {
+          if (kDebugMode) {
+            print('✅ [PROVIDERS] Creating AdProvider');
+          }
+          return AdProvider();
+        }),
+        ChangeNotifierProvider(create: (_) {
+          if (kDebugMode) {
+            print('✅ [PROVIDERS] Creating AnalyticsProvider');
+          }
+          return AnalyticsProvider();
+        }),
+        ChangeNotifierProvider(create: (_) {
+          if (kDebugMode) {
+            print('✅ [PROVIDERS] Creating DeviceProvider');
+          }
+          return DeviceProvider();
+        }),
       ],
       child: MaterialApp(
         title: 'Digital Signage',
