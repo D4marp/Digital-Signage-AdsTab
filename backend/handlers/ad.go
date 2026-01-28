@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"digital-signage-backend/config"
 	"digital-signage-backend/database"
@@ -408,11 +409,11 @@ func (h *AdHandler) ReorderAds(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Ads reordered successfully"})
 }
-// TrackAdView - mencatat view count untuk setiap ad
+// TrackAdView - mencatat view count untuk setiap ad dan update ad_analytics
 func (h *AdHandler) TrackAdView(c *gin.Context) {
 	id := c.Param("id")
 
-	// Increment view count
+	// Increment view count di tabel ads
 	_, err := database.DB.Exec(`
 		UPDATE ads SET total_views = total_views + 1
 		WHERE id = ? AND is_deleted = false
@@ -421,6 +422,24 @@ func (h *AdHandler) TrackAdView(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to track view"})
 		return
+	}
+
+	// Update ad_analytics untuk hari ini
+	today := time.Now().Format("2006-01-02")
+	analyticsID := uuid.New().String()
+	
+	// Insert or update analytics record for today
+	_, err = database.DB.Exec(`
+		INSERT INTO ad_analytics (id, ad_id, date, impressions, unique_devices, created_at, updated_at)
+		VALUES (?, ?, ?, 1, 1, NOW(), NOW())
+		ON DUPLICATE KEY UPDATE
+			impressions = impressions + 1,
+			updated_at = NOW()
+	`, analyticsID, id, today)
+	
+	if err != nil {
+		// Log error but don't fail the request - view is still tracked in ads table
+		// Analytics is secondary data
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "View tracked"})
