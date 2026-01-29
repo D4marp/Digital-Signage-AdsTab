@@ -424,48 +424,61 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
         ),
 
         // Top Bar - Title & Views
+        // (Removed - title display hidden)
+
+        // Left Navigation Button (Middle Left)
         Positioned(
+          left: 40,
           top: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.6),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-            padding: EdgeInsets.fromLTRB(
-              16,
-              isMobile ? 16 : 24,
-              16,
-              24,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Title
-                Text(
-                  _displayAds[_currentAdIndex].title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+          bottom: 0,
+          child: Center(
+            child: SizedBox(
+              width: 60,
+              height: 60,
+              child: ElevatedButton(
+                onPressed: _previousAd,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFEC0303),
+                  shape: const CircleBorder(),
                 ),
-              ],
+                child: const Icon(
+                  Icons.chevron_left,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
             ),
           ),
         ),
 
-        // Bottom Bar - Navigation & More Info
+        // Right Navigation Button (Middle Right)
+        Positioned(
+          right: 40,
+          top: 0,
+          bottom: 0,
+          child: Center(
+            child: SizedBox(
+              width: 60,
+              height: 60,
+              child: ElevatedButton(
+                onPressed: _nextAd,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFEC0303),
+                  shape: const CircleBorder(),
+                ),
+                child: const Icon(
+                  Icons.chevron_right,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+
+
+        // Bottom Bar - Pagination Dots & Tap Here Button
         Positioned(
           bottom: 0,
           left: 0,
@@ -485,116 +498,47 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Tab Indicator with Double Tap Icon
+                // Pagination Dots
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Double Tap Icon
-                    Assets.icons.doubleTap.svg(
-                      width: 24,
-                      height: 24,
-                      colorFilter: const ColorFilter.mode(
-                        Colors.cyan,
-                        BlendMode.srcIn,
+                  children: List.generate(
+                    _displayAds.length,
+                    (index) => Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: _currentAdIndex == index ? 24 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: _currentAdIndex == index
+                            ? const Color(0xFFEC0303)
+                            : Colors.grey,
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    // Tabs
-                    Flexible(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          _displayAds.length,
-                          (index) => Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            width: _currentAdIndex == index ? 24 : 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: _currentAdIndex == index
-                                  ? Colors.cyan
-                                  : Colors.grey,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 16),
-
-                // Navigation & Actions Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Previous Button (Always Active - Looping)
-                    SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _previousAd,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.cyan,
-                          shape: const CircleBorder(),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_ios,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                
+                // Tap Here Button
+                SizedBox(
+                  width: 200,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _showAdDetail,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEC0303),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
                       ),
                     ),
-
-                    // More Info Button (Double Tap Icon Only)
-                    SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _showAdDetail,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrange,
-                          shape: const CircleBorder(),
-                          padding: EdgeInsets.zero,
-                        ),
-                        child: Assets.icons.doubleTap.svg(
-                          width: 28,
-                          height: 28,
-                          colorFilter: const ColorFilter.mode(
-                            Colors.white,
-                            BlendMode.srcIn,
-                          ),
-                        ),
+                    child: const Text(
+                      'Tap Here',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
                       ),
                     ),
-
-                    // Next Button (Always Active - Looping)
-                    SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _nextAd,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.cyan,
-                          shape: const CircleBorder(),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Navigation Indicator
-                const SizedBox(height: 12),
-                Text(
-                  '${_currentAdIndex + 1} / ${_displayAds.length}',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -610,12 +554,12 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
       return Container(
         color: Colors.black,
         child: Image.network(
-          ad.mediaUrl,
+          ad.mediaUrl,  // HOME SCREEN ONLY: Display main image (NOT gallery images)
           fit: BoxFit.contain,
           cacheHeight: (MediaQuery.of(context).size.height * MediaQuery.of(context).devicePixelRatio).toInt(),
           cacheWidth: (MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio).toInt(),
           errorBuilder: (context, error, stackTrace) {
-            debugPrint('❌ Image load error for ${ad.mediaUrl}: $error');
+            debugPrint('❌ [DisplayHome] Image load error for ${ad.mediaUrl}: $error');
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -646,7 +590,7 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Memuat: ${(((loadingProgress.cumulativeBytesLoaded / 1024 / 1024).toStringAsFixed(1))) ?? '0'}MB',
+                    'Memuat: ${(loadingProgress.cumulativeBytesLoaded / 1024 / 1024).toStringAsFixed(1)}MB',
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ],

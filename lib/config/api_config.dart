@@ -2,19 +2,24 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // Static base URL - initialize once on app start
-  static late String _baseUrl;
+  // Static base URL with default value to avoid LateInitializationError
+  static String _baseUrl = 'http://localhost:8080/api/v1';
+  static bool _initialized = false;
   
   // Initialize with the actual base URL from env or fallback
   static void initialize() {
+    if (_initialized) return;
+    
     try {
       final url = dotenv.env['API_BASE_URL'];
-      _baseUrl = url ?? 'http://saas.hcm-lab.id/api/v1';
+      _baseUrl = url ?? 'http://localhost:8080/api/v1';
+      _initialized = true;
       if (kDebugMode) {
         print('✅ [ApiConfig] Initialized baseUrl: $_baseUrl');
       }
     } catch (e) {
-      _baseUrl = 'http://saas.hcm-lab.id/api/v1';
+      _baseUrl = 'http://localhost:8080/api/v1';
+      _initialized = true;
       if (kDebugMode) {
         print('⚠️  [ApiConfig] Error initializing baseUrl: $e, using fallback: $_baseUrl');
       }
@@ -23,8 +28,11 @@ class ApiConfig {
 
   // Use environment variable for base URL with fallback
   static String get baseUrl {
-    if (_baseUrl.isEmpty) {
+    if (!_initialized) {
       initialize();
+    }
+    if (kDebugMode) {
+      print('🔗 [ApiConfig.baseUrl] Returning: $_baseUrl');
     }
     return _baseUrl;
   }

@@ -1,4 +1,4 @@
-package com.example.digital_signage
+package com.example.ads_tap
 
 import io.flutter.embedding.android.FlutterActivity
 
