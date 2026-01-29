@@ -344,7 +344,7 @@ class _AdDetailScreenState extends State<AdDetailScreen> {
                                       color: Colors.purple,
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    child: const Icon(Icons.qr_code2,
+                                    child: const Icon(Icons.qr_code,
                                         color: Colors.white, size: 18),
                                   ),
                                   const SizedBox(width: 8),

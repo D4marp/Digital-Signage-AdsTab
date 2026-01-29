@@ -505,7 +505,7 @@ class _AdDetailDialogState extends State<AdDetailDialog> {
                                       color: Colors.purple,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: const Icon(Icons.qr_code2,
+                                    child: const Icon(Icons.qr_code,
                                         color: Colors.white, size: 22),
                                   ),
                                   const SizedBox(width: 10),
