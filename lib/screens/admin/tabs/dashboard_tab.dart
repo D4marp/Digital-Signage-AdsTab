@@ -184,7 +184,7 @@ class _DashboardTabState extends State<DashboardTab> {
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Welcome to Digital Signage Dashboard',
+                        'Welcome to AdsTap Dashboard',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 24,

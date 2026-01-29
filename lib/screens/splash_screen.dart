@@ -87,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
               // Title
               ResponsiveText(
-                'Digital Signage',
+                'AdsTap',
                 baseFontSize: 32,
                 style: TextStyle(
                   color: Colors.white,

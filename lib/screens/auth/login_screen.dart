@@ -149,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Title
                   ResponsiveText(
-                    'Digital Signage',
+                    'AdsTap',
                     baseFontSize: 32,
                     style: TextStyle(
                       color: Colors.white,

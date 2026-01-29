@@ -37,7 +37,7 @@ class ModeSelectionScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Digital Signage',
+                      'AdsTap',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -108,7 +108,7 @@ class ModeSelectionScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text(
-                  'Aplikasi Digital Signage v1.0',
+                  'Aplikasi AdsTap v1.0',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.white54,
                       ),

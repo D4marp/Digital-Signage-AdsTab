@@ -63,7 +63,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> with SingleTickerProv
               ),
               const SizedBox(width: 12),
               const Text(
-                'Digital Signage',
+                'AdsTap',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
             ],
