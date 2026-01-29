@@ -2,20 +2,31 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  // Use environment variable for base URL with fallback
-  static String get baseUrl {
+  // Static base URL - initialize once on app start
+  static late String _baseUrl;
+  
+  // Initialize with the actual base URL from env or fallback
+  static void initialize() {
     try {
       final url = dotenv.env['API_BASE_URL'];
+      _baseUrl = url ?? 'http://saas.hcm-lab.id/api/v1';
       if (kDebugMode) {
-        print('📡 [ApiConfig] baseUrl: $url');
+        print('✅ [ApiConfig] Initialized baseUrl: $_baseUrl');
       }
-      return url ?? 'http://saas.hcm-lab.id/api/v1';
     } catch (e) {
+      _baseUrl = 'http://saas.hcm-lab.id/api/v1';
       if (kDebugMode) {
-        print('❌ [ApiConfig] Error getting baseUrl: $e, using fallback');
+        print('⚠️  [ApiConfig] Error initializing baseUrl: $e, using fallback: $_baseUrl');
       }
-      return 'http://saas.hcm-lab.id/api/v1';
     }
+  }
+
+  // Use environment variable for base URL with fallback
+  static String get baseUrl {
+    if (_baseUrl.isEmpty) {
+      initialize();
+    }
+    return _baseUrl;
   }
   
   // Auth endpoints

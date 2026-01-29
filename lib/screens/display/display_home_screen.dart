@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:async';
 import '../../providers/ad_provider.dart';
 import '../../models/ad_model.dart';
 import '../../utils/responsive_helper.dart';
@@ -22,7 +22,8 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
   late PageController _pageController;
   int _currentAdIndex = 0;
   late List<AdModel> _displayAds = [];
-  int _totalViewsForCurrentTab = 0;
+  Timer? _autoRotateTimer;
+  static const int AUTO_ROTATE_INTERVAL_SECONDS = 10;
 
   @override
   void initState() {
@@ -69,6 +70,7 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
           }
         });
         if (_displayAds.isNotEmpty) {
+          _startAutoRotate();
           await _trackViewForCurrentAd();
         }
       }
@@ -89,9 +91,6 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
       final currentAd = _displayAds[_currentAdIndex];
       final adProvider = Provider.of<AdProvider>(context, listen: false);
       await adProvider.trackAdView(currentAd.id);
-      setState(() {
-        _totalViewsForCurrentTab = currentAd.totalViews;
-      });
     }
   }
 
@@ -141,13 +140,43 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _stopAutoRotate();
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _startAutoRotate() {
+    // Cancel existing timer
+    _autoRotateTimer?.cancel();
+    
+    // Start new timer to auto-advance to next ad every 10 seconds
+    _autoRotateTimer = Timer.periodic(
+      Duration(seconds: AUTO_ROTATE_INTERVAL_SECONDS),
+      (_) {
+        if (mounted && _displayAds.isNotEmpty) {
+          _nextAd();
+        }
+      },
+    );
+    
+    if (kDebugMode) {
+      print('✅ [DisplayHomeScreen] Auto-rotate started (${AUTO_ROTATE_INTERVAL_SECONDS}s interval)');
+    }
+  }
+
+  void _stopAutoRotate() {
+    _autoRotateTimer?.cancel();
+    _autoRotateTimer = null;
+    
+    if (kDebugMode) {
+      print('⏹️  [DisplayHomeScreen] Auto-rotate stopped');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveHelper.isMobile(context);
+    final isSmallMobile = ResponsiveHelper.isSmallMobile(context);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -155,7 +184,7 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
         builder: (context, adProvider, _) {
           // Show loading shimmer
           if (adProvider.isLoading && _displayAds.isEmpty) {
-            return _buildShimmerLoading();
+            return _buildShimmerLoading(context, isSmallMobile);
           }
 
           // Show content with refresh indicator
@@ -169,23 +198,28 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
               physics: const AlwaysScrollableScrollPhysics(),
               child: SizedBox(
                 height: MediaQuery.of(context).size.height,
-                child: _buildAdDisplayContent(context, adProvider, isMobile),
+                child: _buildAdDisplayContent(context, adProvider, isMobile, isSmallMobile),
+              ),
             ),
-            )
           );
         },
       ),
     );
   }
 
-  Widget _buildShimmerLoading() {
+  Widget _buildShimmerLoading(BuildContext context, bool isSmallMobile) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final containerWidth = (screenWidth * 0.8).clamp(250, 400);
+    final containerHeight = (screenHeight * 0.5).clamp(300, 500);
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 300,
-            height: 400,
+            width: containerWidth.toDouble(),
+            height: containerHeight.toDouble(),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               gradient: LinearGradient(
@@ -216,7 +250,7 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: isSmallMobile ? 16 : 24),
           Shimmer.fromColors(
             baseColor: Colors.grey[800]!,
             highlightColor: Colors.grey[600]!,
@@ -242,12 +276,12 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          const Text(
+          SizedBox(height: isSmallMobile ? 16 : 24),
+          Text(
             'Memuat iklan...',
             style: TextStyle(
               color: Colors.grey,
-              fontSize: 16,
+              fontSize: isSmallMobile ? 14 : 16,
             ),
           ),
         ],
@@ -256,7 +290,7 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
   }
 
   Widget _buildAdDisplayContent(
-      BuildContext context, AdProvider adProvider, bool isMobile) {
+      BuildContext context, AdProvider adProvider, bool isMobile, bool isSmallMobile) {
     // Show error if any
     if (adProvider.errorMessage != null && _displayAds.isEmpty) {
       return Center(
@@ -332,8 +366,6 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
             int actualIndex = index % _displayAds.length;
             setState(() {
               _currentAdIndex = actualIndex;
-              _totalViewsForCurrentTab =
-                  _displayAds[actualIndex].totalViews;
             });
             _trackViewForCurrentAd();
           },

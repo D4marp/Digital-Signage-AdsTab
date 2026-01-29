@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../providers/analytics_provider.dart';
 import '../../../models/dashboard_stats.dart';
 import '../../../utils/format_helper.dart';
+import '../../../utils/responsive_helper.dart';
 
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
@@ -42,47 +43,51 @@ class _DashboardTabState extends State<DashboardTab> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final isMobile = MediaQuery.of(context).size.width < 768;
-    final isTablet = MediaQuery.of(context).size.width >= 768 && MediaQuery.of(context).size.width < 1024;
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final isSmallMobile = ResponsiveHelper.isSmallMobile(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+    final padding = ResponsiveHelper.getResponsivePadding(context);
+    final spacing = ResponsiveHelper.getResponsiveSpacing(context);
 
     return RefreshIndicator(
       onRefresh: _loadStats,
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(isMobile ? 16 : 24),
+        padding: padding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Welcome Header
-            _buildWelcomeHeader(isMobile),
-            SizedBox(height: isMobile ? 20 : 32),
+            _buildWelcomeHeader(isMobile, isSmallMobile),
+            SizedBox(height: spacing * 1.5),
             
             // Stats Overview Cards
-            _buildStatsOverview(isMobile, isTablet),
-            SizedBox(height: isMobile ? 20 : 32),
+            _buildStatsOverview(isMobile, isTablet, isSmallMobile),
+            SizedBox(height: spacing * 1.5),
             
-            // Charts and Top Ads
-            isMobile
-                ? Column(
-                    children: [
-                      _buildPerformanceChart(isMobile),
-                      SizedBox(height: isMobile ? 20 : 32),
-                      _buildTopAds(isMobile),
-                    ],
-                  )
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: _buildPerformanceChart(isMobile),
-                      ),
-                      SizedBox(width: isMobile ? 16 : 24),
-                      Expanded(
-                        child: _buildTopAds(isMobile),
-                      ),
-                    ],
+            // Charts and Top Ads - responsive layout
+            if (isMobile)
+              Column(
+                children: [
+                  _buildPerformanceChart(isMobile),
+                  SizedBox(height: spacing),
+                  _buildTopAds(isMobile),
+                ],
+              )
+            else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: _buildPerformanceChart(isMobile),
                   ),
-            SizedBox(height: isMobile ? 20 : 32),
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: _buildTopAds(isMobile),
+                  ),
+                ],
+              ),
+            SizedBox(height: spacing * 1.5),
             
             // Quick Actions
             _buildQuickActions(isMobile),
@@ -92,7 +97,7 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  Widget _buildWelcomeHeader(bool isMobile) {
+  Widget _buildWelcomeHeader(bool isMobile, bool isSmallMobile) {
     final hour = DateTime.now().hour;
     String greeting = 'Good Morning';
     IconData icon = Icons.wb_sunny;
@@ -202,7 +207,7 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  Widget _buildStatsOverview(bool isMobile, bool isTablet) {
+  Widget _buildStatsOverview(bool isMobile, bool isTablet, bool isSmallMobile) {
     int crossCount = 4;
     double aspectRatio = 1.5;
     

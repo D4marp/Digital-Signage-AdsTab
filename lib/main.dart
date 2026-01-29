@@ -10,6 +10,7 @@ import 'providers/device_provider.dart';
 import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
 import 'services/api_client.dart';
+import 'config/api_config.dart';
 
 Future<void> initializeApp() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,14 +24,31 @@ Future<void> initializeApp() async {
     if (kDebugMode) {
       print('🚀 [INIT] Loading .env file...');
     }
-    await dotenv.load(fileName: '.env');
+    
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️  [INIT] .env not found, using system environment or defaults: $e');
+      }
+      // Continue with system env or defaults
+    }
     
     // Add small delay to ensure dotenv is fully initialized
     await Future.delayed(const Duration(milliseconds: 100));
     
     if (kDebugMode) {
-      print('✅ [INIT] .env loaded successfully');
+      print('✅ [INIT] .env loaded (or skipped)');
       print('📡 [INIT] API URL: ${dotenv.env['API_BASE_URL'] ?? 'NOT SET'}');
+    }
+    
+    // Initialize ApiConfig AFTER dotenv is loaded
+    if (kDebugMode) {
+      print('🚀 [INIT] Initializing ApiConfig...');
+    }
+    ApiConfig.initialize();
+    if (kDebugMode) {
+      print('✅ [INIT] ApiConfig initialized');
     }
   } catch (e) {
     if (kDebugMode) {

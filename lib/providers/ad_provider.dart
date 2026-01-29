@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'dart:io';
+import 'dart:io' as io;
 import 'dart:async';
 import '../models/ad_model.dart';
 import '../services/api_client.dart';
+import '../services/upload_service.dart';
 import '../config/api_config.dart';
 
 class AdProvider extends ChangeNotifier {
@@ -40,8 +41,17 @@ class AdProvider extends ChangeNotifier {
       _ads = (response.data as List)
           .map((json) => AdModel.fromJson(json))
           .toList();
-      _isLoading = false;
       
+      debugPrint('📥 [AdProvider] Loaded ${_ads.length} ads');
+      for (var ad in _ads) {
+        if (ad.galleryImages.isNotEmpty) {
+          debugPrint('  ✅ Ad ${ad.id}: ${ad.galleryImages.length} gallery images');
+        } else {
+          debugPrint('  ⚠️  Ad ${ad.id}: No gallery images');
+        }
+      }
+      
+      _isLoading = false;
       // Emit data ke stream
       if (!_adsStreamController.isClosed) {
         _adsStreamController.add(_ads);
@@ -73,22 +83,28 @@ class AdProvider extends ChangeNotifier {
     }
   }
 
-  Future<String> uploadMedia(File file, String fileName) async {
+  Future<String> uploadMedia(io.File? file, String fileName, {List<int>? fileBytes}) async {
     try {
-      FormData formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(
-          file.path,
-          filename: fileName,
-        ),
-      });
-
-      final response = await _apiClient.dio.post(
-        ApiConfig.uploadMedia,
-        data: formData,
+      // Use UploadService with retry logic and validation
+      final uploadService = UploadService();
+      
+      // Validate file before upload
+      final isValid = uploadService.validateFile(fileName);
+      if (!isValid) {
+        throw Exception('Invalid file format or size. Supported: jpg, png, gif, webp (max 100MB)');
+      }
+      
+      // Upload with retry logic
+      final uploadedUrl = await uploadService.uploadFile(
+        fileName,
+        file: file,
+        fileBytes: fileBytes,
       );
-
-      return ApiConfig.uploadBaseUrl + response.data['url'];
+      
+      debugPrint('Upload successful with UploadService: $uploadedUrl');
+      return uploadedUrl;
     } catch (e) {
+      debugPrint('Upload media error: $e');
       throw Exception('Failed to upload media: $e');
     }
   }
@@ -126,6 +142,8 @@ class AdProvider extends ChangeNotifier {
       );
 
       final newAd = AdModel.fromJson(response.data);
+      debugPrint('📝 [AdProvider] Created ad: ${newAd.id}');
+      debugPrint('📸 [AdProvider] Gallery images in response: ${newAd.galleryImages.length}');
       _ads.add(newAd);
       
       // Emit ke stream

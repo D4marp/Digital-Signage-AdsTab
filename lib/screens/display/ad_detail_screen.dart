@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../models/ad_model.dart';
-import '../../utils/responsive_helper.dart';
 
 class AdDetailScreen extends StatefulWidget {
   final AdModel ad;
@@ -42,17 +40,6 @@ class _AdDetailScreenState extends State<AdDetailScreen> {
     super.dispose();
   }
 
-  Future<void> _launchUrl(String url) async {
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://$url';
-    }
-
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
   void _trackConversion() {
     if (_currentGalleryIndex == _galleryImages.length - 1 && !_hasReachedEnd) {
       setState(() {
@@ -70,15 +57,25 @@ class _AdDetailScreenState extends State<AdDetailScreen> {
   }
 
   List<String> get _galleryImages {
+    // Main media is always first
     final images = [widget.ad.mediaUrl];
-    images.addAll(widget.ad.galleryImages.take(2));
-    return images.take(3).toList();
+    
+    // Add gallery images if available
+    if (widget.ad.galleryImages.isNotEmpty) {
+      debugPrint('📸 Gallery images available: ${widget.ad.galleryImages.length}');
+      images.addAll(widget.ad.galleryImages.take(2));
+    } else {
+      debugPrint('⚠️  No gallery images for ad ${widget.ad.id}');
+    }
+    
+    final result = images.take(3).toList();
+    debugPrint('🖼️  Total images in detail: ${result.length} (main + gallery)');
+    return result;
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
 
     return WillPopScope(
       onWillPop: () async {

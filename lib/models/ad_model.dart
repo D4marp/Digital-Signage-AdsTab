@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class AdModel {
   final String id;
   final String title;
@@ -40,6 +42,14 @@ class AdModel {
   });
 
   factory AdModel.fromJson(Map<String, dynamic> json) {
+    final galleryImages = List<String>.from(json['gallery_images'] ?? []);
+    
+    if (galleryImages.isNotEmpty) {
+      debugPrint('✅ [AdModel] Gallery images found: $galleryImages');
+    } else {
+      debugPrint('⚠️  [AdModel] No gallery images in response for ad ${json['id']}');
+    }
+    
     return AdModel(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
@@ -57,7 +67,7 @@ class AdModel {
       companyName: json['company_name'],
       contactInfo: json['contact_info'],
       websiteUrl: json['website_url'],
-      galleryImages: List<String>.from(json['gallery_images'] ?? []),
+      galleryImages: galleryImages,
       totalViews: json['total_views'] ?? 0,
     );
   }

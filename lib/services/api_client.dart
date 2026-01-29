@@ -4,8 +4,11 @@ import '../config/api_config.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiClient {
-  static final ApiClient _instance = ApiClient._internal();
-  factory ApiClient() => _instance;
+  static ApiClient? _instance;
+  factory ApiClient() {
+    _instance ??= ApiClient._internal();
+    return _instance!;
+  }
   
   late Dio _dio;
   static bool _initialized = false;
@@ -13,12 +16,18 @@ class ApiClient {
   static Future<void> init() async {
     if (_initialized) return;
     _initialized = true;
-    // Initialization logic if needed
+    // Force instance creation with updated BaseURL
+    _instance = null;
+    // This will create a new instance with the current ApiConfig.baseUrl
+    ApiClient();
   }
   
   ApiClient._internal() {
+    final currentBaseUrl = ApiConfig.baseUrl;
+    _debugLog('🔧 Creating ApiClient with baseUrl: $currentBaseUrl');
+    
     _dio = Dio(BaseOptions(
-      baseUrl: ApiConfig.baseUrl,
+      baseUrl: currentBaseUrl,
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {

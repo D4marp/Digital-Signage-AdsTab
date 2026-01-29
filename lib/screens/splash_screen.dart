@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import '../../widgets/responsive_layout.dart';
+import '../../utils/responsive_helper.dart';
 import 'mode_selection_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -48,33 +50,73 @@ class _SplashScreenState extends State<SplashScreen> {
     if (kDebugMode) {
       print('✅ [SplashScreen] build called');
     }
+    final isSmallMobile = ResponsiveHelper.isSmallMobile(context);
+    final isMobile = ResponsiveHelper.isMobile(context);
+
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.campaign,
-              size: 100,
-              color: Theme.of(context).primaryColor,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Digital Signage',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Loading...',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey,
-                  ),
-            ),
-            const SizedBox(height: 32),
-            const CircularProgressIndicator(),
-          ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).primaryColor,
+              Theme.of(context).primaryColor.withValues(alpha: 0.6),
+            ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Logo
+              Container(
+                padding: EdgeInsets.all(isSmallMobile ? 16 : 24),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.campaign,
+                  size: isSmallMobile ? 60 : (isMobile ? 80 : 100),
+                  color: Colors.white,
+                ),
+              ),
+              ResponsiveSpacer(height: isSmallMobile ? 20 : 24),
+
+              // Title
+              ResponsiveText(
+                'Digital Signage',
+                baseFontSize: 32,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              ResponsiveSpacer(height: isSmallMobile ? 8 : 12),
+
+              // Subtitle
+              ResponsiveText(
+                'Loading...',
+                baseFontSize: 16,
+                style: TextStyle(color: Colors.white70),
+                textAlign: TextAlign.center,
+              ),
+              ResponsiveSpacer(height: isSmallMobile ? 16 : 32),
+
+              // Loading indicator
+              SizedBox(
+                width: isSmallMobile ? 40 : 50,
+                height: isSmallMobile ? 40 : 50,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

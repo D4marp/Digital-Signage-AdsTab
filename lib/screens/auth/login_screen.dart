@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/responsive_helper.dart';
+import '../../widgets/responsive_layout.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 import '../admin/admin_home_screen.dart';
@@ -106,6 +107,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveHelper.isMobile(context);
+    final isSmallMobile = ResponsiveHelper.isSmallMobile(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = ResponsiveHelper.getResponsivePadding(context);
 
     return Scaffold(
       body: Container(
@@ -121,48 +125,56 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
             child: Padding(
-              padding: EdgeInsets.all(isMobile ? 24 : 48),
+              padding: isMobile ? padding : EdgeInsets.all(screenWidth * 0.05),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Logo/Title
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(isSmallMobile ? 12 : 16),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
                       Icons.display_settings,
-                      size: isMobile ? 64 : 80,
+                      size: isSmallMobile ? 48 : (isMobile ? 64 : 80),
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: isSmallMobile ? 16 : 32),
 
                   // Title
-                  Text(
+                  ResponsiveText(
                     'Digital Signage',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    baseFontSize: 32,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: isSmallMobile ? 8 : 12),
 
                   // Subtitle
-                  Text(
+                  ResponsiveText(
                     'Sistem Manajemen Iklan Digital',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white70,
-                        ),
+                    baseFontSize: 14,
+                    style: TextStyle(
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 48),
+                  SizedBox(height: isSmallMobile ? 24 : 48),
 
-                  // Login Form Container
+                  // Login Form Container - responsive width
                   Container(
-                    constraints: const BoxConstraints(maxWidth: 400),
+                    constraints: BoxConstraints(
+                      maxWidth: isMobile ? double.infinity : 450,
+                      minWidth: isSmallMobile ? 280 : 300,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -174,30 +186,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    padding: const EdgeInsets.all(32),
+                    padding: EdgeInsets.all(isSmallMobile ? 16 : 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         // Form Title
-                        Text(
+                        ResponsiveText(
                           'Masuk',
-                          style:
-                              Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          baseFontSize: 24,
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: isSmallMobile ? 16 : 24),
 
                         // Email Field
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            ResponsiveText(
                               'Email',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
+                              baseFontSize: 14,
+                              style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 8),
                             TextField(
@@ -205,31 +214,30 @@ class _LoginScreenState extends State<LoginScreen> {
                               keyboardType: TextInputType.emailAddress,
                               enabled: !_isLoading,
                               decoration: InputDecoration(
-                                hintText: 'Masukkan email Anda',
+                                hintText: 'Email Anda',
                                 prefixIcon: const Icon(Icons.email_outlined),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
+                                  horizontal: 12,
                                   vertical: 12,
                                 ),
+                                isDense: true,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: isSmallMobile ? 12 : 20),
 
                         // Password Field
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            ResponsiveText(
                               'Password',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
+                              baseFontSize: 14,
+                              style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 8),
                             TextField(
@@ -237,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               obscureText: _obscurePassword,
                               enabled: !_isLoading,
                               decoration: InputDecoration(
-                                hintText: 'Masukkan password Anda',
+                                hintText: 'Password Anda',
                                 prefixIcon: const Icon(Icons.lock_outlined),
                                 suffixIcon: IconButton(
                                   icon: Icon(
@@ -255,46 +263,79 @@ class _LoginScreenState extends State<LoginScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
+                                  horizontal: 12,
                                   vertical: 12,
+                                ),
+                                isDense: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: isSmallMobile ? 10 : 16),
+
+                        // Remember Me & Forgot Password
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Row(
+                                children: [
+                                  Checkbox(
+                                    value: _rememberMe,
+                                    onChanged: _isLoading
+                                        ? null
+                                        : (value) {
+                                            setState(() {
+                                              _rememberMe = value ?? false;
+                                            });
+                                          },
+                                  ),
+                                  Flexible(
+                                    child: ResponsiveText(
+                                      'Ingat saya',
+                                      baseFontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _isLoading
+                                  ? null
+                                  : () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ForgotPasswordScreen(),
+                                        ),
+                                      );
+                                    },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                              ),
+                              child: ResponsiveText(
+                                'Lupa?',
+                                baseFontSize: 12,
+                                style: TextStyle(
+                                  color: Theme.of(context).primaryColor,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-
-                        // Remember Me Checkbox
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: _rememberMe,
-                              onChanged: _isLoading
-                                  ? null
-                                  : (value) {
-                                      setState(() {
-                                        _rememberMe = value ?? false;
-                                      });
-                                    },
-                            ),
-                            const Text(
-                              'Ingat saya',
-                              style: TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: isSmallMobile ? 12 : 20),
 
                         // Login Button
                         SizedBox(
                           width: double.infinity,
-                          height: 50,
+                          height: isSmallMobile ? 44 : 50,
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _handleLogin,
                             child: _isLoading
                                 ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
+                                    width: 20,
+                                    height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
@@ -302,54 +343,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     ),
                                   )
-                                : const Text(
+                                : ResponsiveText(
                                     'Masuk',
-                                    style: TextStyle(fontSize: 16),
+                                    baseFontSize: 16,
+                                    style: TextStyle(color: Colors.white),
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 16),
 
-                        // Forgot Password Link
-                        Center(
-                          child: TextButton(
-                            onPressed: _isLoading
-                                ? null
-                                : () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ForgotPasswordScreen(),
-                                      ),
-                                    );
-                                  },
-                            child: const Text(
-                              'Lupa Password?',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Divider
-                        const Divider(),
-                        const SizedBox(height: 16),
+                        SizedBox(height: isSmallMobile ? 12 : 16),
 
                         // Register Link
                         Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
                             children: [
-                              const Text(
+                              ResponsiveText(
                                 'Belum punya akun? ',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
+                                baseFontSize: 13,
+                                style: TextStyle(color: Colors.grey),
                               ),
                               TextButton(
                                 onPressed: _isLoading
@@ -363,11 +375,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ),
                                         );
                                       },
-                                child: const Text(
-                                  'Daftar Sekarang',
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 0),
+                                ),
+                                child: ResponsiveText(
+                                  'Daftar',
+                                  baseFontSize: 13,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                                    color: Theme.of(context).primaryColor,
                                   ),
                                 ),
                               ),

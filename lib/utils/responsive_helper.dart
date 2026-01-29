@@ -5,6 +5,73 @@ class ResponsiveHelper {
   static const double _mobileBreakpoint = 480;
   static const double _tabletBreakpoint = 768;
   static const double _desktopBreakpoint = 1024;
+  static const double _largeDesktopBreakpoint = 1440;
+
+  /// Get screen size
+  static Size getScreenSize(BuildContext context) {
+    return MediaQuery.of(context).size;
+  }
+
+  /// Get responsive padding
+  static EdgeInsets getResponsivePadding(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < _mobileBreakpoint) {
+      return const EdgeInsets.all(12);
+    } else if (width < _tabletBreakpoint) {
+      return const EdgeInsets.all(16);
+    } else if (width < _desktopBreakpoint) {
+      return const EdgeInsets.all(20);
+    } else {
+      return const EdgeInsets.all(24);
+    }
+  }
+
+  /// Get responsive spacing
+  static double getResponsiveSpacing(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < _mobileBreakpoint) {
+      return 8;
+    } else if (width < _tabletBreakpoint) {
+      return 12;
+    } else if (width < _desktopBreakpoint) {
+      return 16;
+    } else {
+      return 24;
+    }
+  }
+
+  /// Get responsive font size
+  static double getResponsiveFontSize(BuildContext context, double baseFontSize) {
+    final width = MediaQuery.of(context).size.width;
+    final scaleFactor = width / 1024; // Normalize to desktop breakpoint
+    return baseFontSize * scaleFactor.clamp(0.8, 1.2);
+  }
+
+  /// Get grid columns based on screen size
+  static int getGridColumns(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < _mobileBreakpoint) {
+      return 1;
+    } else if (width < _tabletBreakpoint) {
+      return 2;
+    } else if (width < _desktopBreakpoint) {
+      return 3;
+    } else {
+      return 4;
+    }
+  }
+
+  /// Get max content width
+  static double getMaxContentWidth(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < _desktopBreakpoint) {
+      return width;
+    } else if (width < _largeDesktopBreakpoint) {
+      return 1200;
+    } else {
+      return 1400;
+    }
+  }
 
   /// Deteksi ukuran device
   static DeviceSize getDeviceSize(BuildContext context) {
@@ -21,12 +88,17 @@ class ResponsiveHelper {
     }
   }
 
-  /// Cek apakah mobile
+  /// Cek apakah mobile (< 768)
   static bool isMobile(BuildContext context) {
     return MediaQuery.of(context).size.width < _tabletBreakpoint;
   }
 
-  /// Cek apakah tablet
+  /// Cek apakah small mobile (< 480)
+  static bool isSmallMobile(BuildContext context) {
+    return MediaQuery.of(context).size.width < _mobileBreakpoint;
+  }
+
+  /// Cek apakah tablet (768 - 1024)
   static bool isTablet(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     return width >= _tabletBreakpoint && width < _desktopBreakpoint;
@@ -80,21 +152,6 @@ class ResponsiveHelper {
     return width - 32; // padding
   }
 
-  /// Get grid columns count
-  static int getGridColumns(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-
-    if (width < _tabletBreakpoint) {
-      return 1;
-    } else if (width < _desktopBreakpoint) {
-      return 2;
-    } else if (width < 1200) {
-      return 3;
-    } else {
-      return 4;
-    }
-  }
-
   /// Get dialog width responsif
   static double getDialogWidth(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -106,22 +163,6 @@ class ResponsiveHelper {
       return width * 0.7;
     } else {
       return 600;
-    }
-  }
-
-  /// Get font size responsif
-  static double getResponsiveFontSize(
-    BuildContext context, {
-    required double mobile,
-    required double tablet,
-    required double desktop,
-  }) {
-    if (ResponsiveHelper.isMobile(context)) {
-      return mobile;
-    } else if (ResponsiveHelper.isTablet(context)) {
-      return tablet;
-    } else {
-      return desktop;
     }
   }
 
