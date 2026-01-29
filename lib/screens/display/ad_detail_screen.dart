@@ -197,106 +197,212 @@ class _AdDetailScreenState extends State<AdDetailScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 12),
 
-                      // Company
-                      if (widget.ad.companyName != null && widget.ad.companyName!.isNotEmpty)
-                        Text(
-                          widget.ad.companyName ?? '',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade700,
-                            fontWeight: FontWeight.w500,
+                      // Description Card
+                      if (widget.ad.description != null && widget.ad.description!.isNotEmpty)
+                        Card(
+                          elevation: 0,
+                          color: Colors.blue.withValues(alpha: 0.08),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: Colors.blue.withValues(alpha: 0.3),
+                              width: 1.5,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Text(
+                              widget.ad.description!,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                height: 1.5,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ),
 
                       const SizedBox(height: 12),
 
-                      // QR Code Section (Compact)
+                      // Company Card
+                      if (widget.ad.companyName != null && widget.ad.companyName!.isNotEmpty)
+                        Card(
+                          elevation: 0,
+                          color: Colors.orange.withValues(alpha: 0.08),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: Colors.orange.withValues(alpha: 0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Icon(Icons.business,
+                                      color: Colors.white, size: 16),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    widget.ad.companyName ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 12),
+
+                      // Contact Card
+                      if (widget.ad.contactInfo != null && widget.ad.contactInfo!.isNotEmpty)
+                        Card(
+                          elevation: 0,
+                          color: Colors.green.withValues(alpha: 0.08),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: Colors.green.withValues(alpha: 0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Icon(Icons.email,
+                                      color: Colors.white, size: 16),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    widget.ad.contactInfo ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.w500,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      const SizedBox(height: 12),
+
+                      // QR Code Section (Compact but Enhanced)
                       if ((widget.ad.websiteUrl ?? '').isNotEmpty) ...[
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.grey[300]!, width: 1),
+                            color: Colors.purple.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.purple.withValues(alpha: 0.3),
+                              width: 1.5,
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const Text(
-                                'Scan',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.purple,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: const Icon(Icons.qr_code2,
+                                        color: Colors.white, size: 18),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Scan Kode QR',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 10),
                               Container(
-                                padding: const EdgeInsets.all(3),
+                                padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.grey[300]!,
+                                    width: 1,
+                                  ),
                                 ),
                                 child: QrImageView(
                                   data: widget.ad.websiteUrl ?? '',
                                   version: QrVersions.auto,
-                                  size: 100.0,
+                                  size: 120.0,
                                   gapless: false,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                       ],
 
-                      // Contact Info (Compact)
-                      if (widget.ad.contactInfo != null && widget.ad.contactInfo!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.email, color: Colors.blue, size: 14),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  widget.ad.contactInfo ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.black87,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      // Buttons Row
+                      // Buttons Row (Enhanced)
                       Row(
                         children: [
-                          // Close Button
+                          // Back Button
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () => Navigator.pop(context),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.deepOrange,
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 side: const BorderSide(
                                   color: Colors.deepOrange,
-                                  width: 1.5,
+                                  width: 2,
                                 ),
                               ),
-                              icon: const Icon(Icons.arrow_back, size: 14),
-                              label: const Text('Kembali', style: TextStyle(fontSize: 11)),
+                              icon: const Icon(Icons.arrow_back, size: 18),
+                              label: const Text('Kembali', 
+                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                             ),
                           ),
                         ],
