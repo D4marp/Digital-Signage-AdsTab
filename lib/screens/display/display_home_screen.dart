@@ -71,6 +71,8 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
         });
         if (_displayAds.isNotEmpty) {
           _startAutoRotate();
+          // Preload images for faster display
+          _preloadAdImages(_displayAds);
           await _trackViewForCurrentAd();
         }
       }
@@ -82,6 +84,27 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading ads: $e')),
         );
+      }
+    }
+  }
+
+  Future<void> _preloadAdImages(List<AdModel> ads) async {
+    if (kDebugMode) {
+      print('🖼️  [DisplayHomeScreen] Preloading ${ads.length} ad images...');
+    }
+    for (final ad in ads) {
+      if (ad.mediaType == 'image') {
+        try {
+          final ImageProvider imageProvider = NetworkImage(ad.mediaUrl);
+          await precacheImage(imageProvider, context);
+          if (kDebugMode) {
+            print('✅ [DisplayHomeScreen] Preloaded: ${ad.mediaUrl}');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('⚠️  [DisplayHomeScreen] Failed to preload ${ad.mediaUrl}: $e');
+          }
+        }
       }
     }
   }
@@ -190,6 +213,9 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
           // Show content with refresh indicator
           return RefreshIndicator(
             onRefresh: () async {
+              // Force refresh with new data
+              final adProvider = Provider.of<AdProvider>(context, listen: false);
+              await adProvider.refreshAds();
               _loadAds();
             },
             backgroundColor: Colors.white,
@@ -565,7 +591,10 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
         child: Image.network(
           ad.mediaUrl,
           fit: BoxFit.contain,
+          cacheHeight: (MediaQuery.of(context).size.height * MediaQuery.of(context).devicePixelRatio).toInt(),
+          cacheWidth: (MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio).toInt(),
           errorBuilder: (context, error, stackTrace) {
+            debugPrint('❌ Image load error for ${ad.mediaUrl}: $error');
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -584,12 +613,22 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.cyan[400]!),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.cyan[400]!),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Memuat: ${(((loadingProgress.cumulativeBytesLoaded / 1024 / 1024).toStringAsFixed(1))) ?? '0'}MB',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ],
               ),
             );
           },

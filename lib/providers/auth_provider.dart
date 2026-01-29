@@ -25,13 +25,18 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _loadCurrentUser() async {
     try {
       final token = await _apiClient.getAuthToken();
-      if (token != null) {
-        final response = await _apiClient.dio.get(ApiConfig.currentUser);
-        _userModel = UserModel.fromJson(response.data);
-        notifyListeners();
+      if (token != null && token.isNotEmpty) {
+        try {
+          final response = await _apiClient.dio.get(ApiConfig.currentUser);
+          if (response.data != null) {
+            _userModel = UserModel.fromJson(response.data);
+          }
+        } catch (e) {
+          debugPrint('⚠️  Could not fetch current user: $e');
+        }
       }
     } catch (e) {
-      debugPrint('Error loading current user: $e');
+      debugPrint('⚠️  Error loading current user: $e');
     }
   }
 

@@ -33,6 +33,12 @@ class AdProvider extends ChangeNotifier {
   }
 
   Future<void> loadAds() async {
+    // Skip if already loading or already have data
+    if (_isLoading || _ads.isNotEmpty) {
+      debugPrint('⏭️  [AdProvider] Skipping load - already have ${_ads.length} ads');
+      return;
+    }
+    
     _isLoading = true;
     notifyListeners();
 
@@ -63,6 +69,12 @@ class AdProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> refreshAds() async {
+    // Force refresh by clearing cache
+    _ads.clear();
+    await loadAds();
   }
 
   Future<List<AdModel>> getActiveAdsForDevice(String location) async {
