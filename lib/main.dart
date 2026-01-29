@@ -92,12 +92,34 @@ Future<void> initializeApp() async {
 }
 
 void main() async {
-  await initializeApp();
+  FlutterError.onError = (FlutterErrorDetails details) {
+    if (kDebugMode) {
+      print('❌ [FLUTTER_ERROR] ${details.exception}');
+      print('Stack: ${details.stack}');
+    }
+  };
   
-  if (kDebugMode) {
-    print('🚀 [MAIN] Running app...');
+  try {
+    await initializeApp();
+    
+    if (kDebugMode) {
+      print('🚀 [MAIN] Running app...');
+    }
+    runApp(const MyApp());
+  } catch (e) {
+    if (kDebugMode) {
+      print('❌ [MAIN] Fatal error: $e');
+    }
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text('App initialization failed:\n$e'),
+          ),
+        ),
+      ),
+    );
   }
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

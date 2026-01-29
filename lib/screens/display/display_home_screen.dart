@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'dart:async';
+import 'dart:io' as io;
 import '../../providers/ad_provider.dart';
 import '../../models/ad_model.dart';
 import '../../utils/responsive_helper.dart';
@@ -71,8 +72,10 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
         });
         if (_displayAds.isNotEmpty) {
           _startAutoRotate();
-          // Preload images for faster display
-          _preloadAdImages(_displayAds);
+          // Skip image preloading on Android to avoid crashes - will load lazily
+          if (!kIsWeb && !_isAndroid()) {
+            _preloadAdImages(_displayAds);
+          }
           await _trackViewForCurrentAd();
         }
       }
@@ -88,23 +91,41 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
     }
   }
 
+  bool _isAndroid() {
+    return io.Platform.isAndroid;
+  }
+
   Future<void> _preloadAdImages(List<AdModel> ads) async {
     if (kDebugMode) {
-      print('🖼️  [DisplayHomeScreen] Preloading ${ads.length} ad images...');
+      print('🖼️  [DisplayHomeScreen] Preloading ${ads.length} ad images in background...');
     }
-    for (final ad in ads) {
-      if (ad.mediaType == 'image') {
-        try {
-          final ImageProvider imageProvider = NetworkImage(ad.mediaUrl);
-          await precacheImage(imageProvider, context);
-          if (kDebugMode) {
-            print('✅ [DisplayHomeScreen] Preloaded: ${ad.mediaUrl}');
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print('⚠️  [DisplayHomeScreen] Failed to preload ${ad.mediaUrl}: $e');
+    try {
+      for (final ad in ads) {
+        if (ad.mediaType == 'image' && mounted) {
+          try {
+            final ImageProvider imageProvider = NetworkImage(ad.mediaUrl);
+            await precacheImage(imageProvider, context).timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                if (kDebugMode) {
+                  print('⏱️  [DisplayHomeScreen] Preload timeout for: ${ad.mediaUrl}');
+                }
+              },
+            );
+            if (kDebugMode) {
+              print('✅ [DisplayHomeScreen] Preloaded: ${ad.mediaUrl}');
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('⚠️  [DisplayHomeScreen] Failed to preload ${ad.mediaUrl}: $e');
+            }
+            // Continue with next image
           }
         }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️  [DisplayHomeScreen] Error in preload batch: $e');
       }
     }
   }

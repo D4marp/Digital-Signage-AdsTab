@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import '../../widgets/responsive_layout.dart';
-import '../../utils/responsive_helper.dart';
+import '../widgets/responsive_layout.dart';
+import '../utils/responsive_helper.dart';
 import 'mode_selection_screen.dart';
 
 class SplashScreen extends StatefulWidget {
