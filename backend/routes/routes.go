@@ -48,8 +48,6 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			ads.POST("", middleware.AuthMiddleware(cfg), adHandler.CreateAd)                 // Protected
 			ads.POST("/upload", middleware.AuthMiddleware(cfg), adHandler.UploadMedia)       // Protected
 			ads.POST("/reorder", middleware.AuthMiddleware(cfg), adHandler.ReorderAds)       // Protected
-			ads.GET("/company/list", adHandler.GetAdsByCompany)                              // Public
-			ads.GET("/company/check-limit", adHandler.CheckCompanyUploadLimit)               // Public
 			
 			// Parameterized routes AFTER
 			ads.GET("/:id", adHandler.GetAdByID)                                             // Public

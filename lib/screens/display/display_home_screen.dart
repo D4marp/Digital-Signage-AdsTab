@@ -423,53 +423,44 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
           },
         ),
 
-        // Top Bar - Title & Views
-        // (Removed - title display hidden)
-
-        // Left Navigation Button (Middle Left)
+        // Left Navigation Button (Center)
         Positioned(
-          left: 40,
+          left: 0,
+          right: 0,
           top: 0,
           bottom: 0,
-          child: Center(
-            child: SizedBox(
-              width: 60,
-              height: 60,
-              child: ElevatedButton(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 40),
+              child: IconButton(
                 onPressed: _previousAd,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEC0303),
-                  shape: const CircleBorder(),
-                ),
-                child: const Icon(
+                icon: const Icon(
                   Icons.chevron_left,
                   color: Colors.white,
-                  size: 28,
+                  size: 40,
                 ),
               ),
             ),
           ),
         ),
 
-        // Right Navigation Button (Middle Right)
+        // Right Navigation Button (Center)
         Positioned(
-          right: 40,
+          left: 0,
+          right: 0,
           top: 0,
           bottom: 0,
-          child: Center(
-            child: SizedBox(
-              width: 60,
-              height: 60,
-              child: ElevatedButton(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 40),
+              child: IconButton(
                 onPressed: _nextAd,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEC0303),
-                  shape: const CircleBorder(),
-                ),
-                child: const Icon(
+                icon: const Icon(
                   Icons.chevron_right,
                   color: Colors.white,
-                  size: 28,
+                  size: 40,
                 ),
               ),
             ),
@@ -519,24 +510,32 @@ class _DisplayHomeScreenState extends State<DisplayHomeScreen>
                 const SizedBox(height: 16),
                 
                 // Tap Here Button
-                SizedBox(
-                  width: 200,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _showAdDetail,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEC0303),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                      ),
+                Container(
+                  width: 240,
+                  height: 240,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      width: 2,
                     ),
-                    child: const Text(
-                      'Tap Here',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _showAdDetail,
+                      customBorder: const CircleBorder(),
+                      child: const Center(
+                        child: Text(
+                          'Tap Here',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 35,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
                     ),
                   ),

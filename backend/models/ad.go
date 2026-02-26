@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"time"
 )
 
 type Ad struct {
@@ -17,14 +16,10 @@ type Ad struct {
 	TargetLocations StringArray `json:"target_locations"`
 	CreatedBy       string      `json:"created_by"`
 	IsDeleted       bool        `json:"is_deleted"`
-	Description     string      `json:"description"`
-	CompanyName     string      `json:"company_name"`
-	ContactInfo     string      `json:"contact_info"`
-	WebsiteURL      string      `json:"website_url"`
-	CreatedAt       time.Time   `json:"created_at"`
-	UpdatedAt       time.Time   `json:"updated_at"`
 	// Gallery images - semua foto promo untuk detail page
 	GalleryImages StringArray `json:"gallery_images"`
+	// About images - ditampilkan setelah gallery images di layer 3
+	AboutImages StringArray `json:"about_images"`
 	// Total views untuk tracking
 	TotalViews int `json:"total_views"`
 }
@@ -59,11 +54,8 @@ type CreateAdRequest struct {
 	MediaType       string   `json:"media_type" binding:"required,oneof=image video pdf"`
 	DurationSeconds int      `json:"duration_seconds" binding:"required,min=1"`
 	TargetLocations []string `json:"target_locations" binding:"required"`
-	Description     string   `json:"description"`
-	CompanyName     string   `json:"company_name"`
-	ContactInfo     string   `json:"contact_info"`
-	WebsiteURL      string   `json:"website_url"`
 	GalleryImages   []string `json:"gallery_images"`
+	AboutImages     []string `json:"about_images"`
 }
 
 type UpdateAdRequest struct {
@@ -72,11 +64,8 @@ type UpdateAdRequest struct {
 	MediaType       *string  `json:"media_type"`
 	DurationSeconds *int     `json:"duration_seconds"`
 	IsEnabled       *bool    `json:"is_enabled"`
-	Description     *string  `json:"description"`
-	CompanyName     *string  `json:"company_name"`
-	ContactInfo     *string  `json:"contact_info"`
-	WebsiteURL      *string  `json:"website_url"`
 	TargetLocations []string `json:"target_locations"`
 	OrderIndex      *int     `json:"order_index"`
 	GalleryImages   []string `json:"gallery_images"`
+	AboutImages     []string `json:"about_images"`
 }

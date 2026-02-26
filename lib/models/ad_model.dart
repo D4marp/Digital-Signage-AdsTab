@@ -13,11 +13,8 @@ class AdModel {
   final DateTime updatedAt;
   final String createdBy;
   final bool isDeleted;
-  final String? description;
-  final String? companyName;
-  final String? contactInfo;
-  final String? websiteUrl;
   final List<String> galleryImages;         // Semua foto promo untuk detail page
+  final List<String> aboutImages;           // Foto tentang/informasi ditampilkan setelah gallery
   final int totalViews;                     // Total views tracking
 
   AdModel({
@@ -33,21 +30,23 @@ class AdModel {
     required this.updatedAt,
     required this.createdBy,
     this.isDeleted = false,
-    this.description,
-    this.companyName,
-    this.contactInfo,
-    this.websiteUrl,
     this.galleryImages = const [],
+    this.aboutImages = const [],
     this.totalViews = 0,
   });
 
   factory AdModel.fromJson(Map<String, dynamic> json) {
     final galleryImages = List<String>.from(json['gallery_images'] ?? []);
+    final aboutImages = List<String>.from(json['about_images'] ?? []);
     
     if (galleryImages.isNotEmpty) {
       debugPrint('✅ [AdModel] Gallery images found: $galleryImages');
     } else {
       debugPrint('⚠️  [AdModel] No gallery images in response for ad ${json['id']}');
+    }
+    
+    if (aboutImages.isNotEmpty) {
+      debugPrint('✅ [AdModel] About images found: $aboutImages');
     }
     
     return AdModel(
@@ -63,11 +62,8 @@ class AdModel {
       updatedAt: DateTime.parse(json['updated_at'] ?? DateTime.now().toIso8601String()),
       createdBy: json['created_by'] ?? '',
       isDeleted: json['is_deleted'] ?? false,
-      description: json['description'],
-      companyName: json['company_name'],
-      contactInfo: json['contact_info'],
-      websiteUrl: json['website_url'],
       galleryImages: galleryImages,
+      aboutImages: aboutImages,
       totalViews: json['total_views'] ?? 0,
     );
   }
@@ -86,11 +82,8 @@ class AdModel {
       'updated_at': updatedAt.toIso8601String(),
       'created_by': createdBy,
       'is_deleted': isDeleted,
-      'description': description,
-      'company_name': companyName,
-      'contact_info': contactInfo,
-      'website_url': websiteUrl,
       'gallery_images': galleryImages,
+      'about_images': aboutImages,
       'total_views': totalViews,
     };
   }
@@ -105,11 +98,8 @@ class AdModel {
     List<String>? targetLocations,
     DateTime? updatedAt,
     bool? isDeleted,
-    String? description,
-    String? companyName,
-    String? contactInfo,
-    String? websiteUrl,
     List<String>? galleryImages,
+    List<String>? aboutImages,
     int? totalViews,
   }) {
     return AdModel(
@@ -125,11 +115,8 @@ class AdModel {
       isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt,
       createdBy: createdBy,
-      description: description ?? this.description,
-      companyName: companyName ?? this.companyName,
-      contactInfo: contactInfo ?? this.contactInfo,
-      websiteUrl: websiteUrl ?? this.websiteUrl,
       galleryImages: galleryImages ?? this.galleryImages,
+      aboutImages: aboutImages ?? this.aboutImages,
       totalViews: totalViews ?? this.totalViews,
     );
   }

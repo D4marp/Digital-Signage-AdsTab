@@ -127,11 +127,8 @@ class AdProvider extends ChangeNotifier {
     required String mediaType,
     required int durationSeconds,
     required List<String> targetLocations,
-    String? description,
-    String? companyName,
-    String? contactInfo,
-    String? websiteUrl,
     List<String>? galleryImages,
+    List<String>? aboutImages,
   }) async {
     try {
       final data = {
@@ -142,11 +139,8 @@ class AdProvider extends ChangeNotifier {
         'target_locations': targetLocations,
       };
       
-      if (description != null) data['description'] = description;
-      if (companyName != null) data['company_name'] = companyName;
-      if (contactInfo != null) data['contact_info'] = contactInfo;
-      if (websiteUrl != null) data['website_url'] = websiteUrl;
       if (galleryImages != null) data['gallery_images'] = galleryImages;
+      if (aboutImages != null) data['about_images'] = aboutImages;
       
       final response = await _apiClient.dio.post(
         ApiConfig.ads,
@@ -156,6 +150,7 @@ class AdProvider extends ChangeNotifier {
       final newAd = AdModel.fromJson(response.data);
       debugPrint('📝 [AdProvider] Created ad: ${newAd.id}');
       debugPrint('📸 [AdProvider] Gallery images in response: ${newAd.galleryImages.length}');
+      debugPrint('🎨 [AdProvider] About images in response: ${newAd.aboutImages.length}');
       _ads.add(newAd);
       
       // Emit ke stream
@@ -180,11 +175,8 @@ class AdProvider extends ChangeNotifier {
     int? durationSeconds,
     bool? isEnabled,
     List<String>? targetLocations,
-    String? description,
-    String? companyName,
-    String? contactInfo,
-    String? websiteUrl,
     List<String>? galleryImages,
+    List<String>? aboutImages,
   }) async {
     try {
       final data = <String, dynamic>{};
@@ -194,11 +186,8 @@ class AdProvider extends ChangeNotifier {
       if (durationSeconds != null) data['duration_seconds'] = durationSeconds;
       if (isEnabled != null) data['is_enabled'] = isEnabled;
       if (targetLocations != null) data['target_locations'] = targetLocations;
-      if (description != null) data['description'] = description;
-      if (companyName != null) data['company_name'] = companyName;
-      if (contactInfo != null) data['contact_info'] = contactInfo;
-      if (websiteUrl != null) data['website_url'] = websiteUrl;
       if (galleryImages != null) data['gallery_images'] = galleryImages;
+      if (aboutImages != null) data['about_images'] = aboutImages;
 
       final response = await _apiClient.dio.put(
         ApiConfig.adById(id),

@@ -1,7 +1,3 @@
-#!/bin/bash
-
-# Digital Signage App - Quick Start Script
-
 echo "🚀 Digital Signage App Setup"
 echo "=============================="
 echo ""

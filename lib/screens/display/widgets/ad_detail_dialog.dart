@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../../../models/ad_model.dart';
 
 class AdDetailDialog extends StatefulWidget {
@@ -32,17 +30,6 @@ class _AdDetailDialogState extends State<AdDetailDialog> {
   void dispose() {
     _galleryController.dispose();
     super.dispose();
-  }
-
-  Future<void> _launchUrl(String url) async {
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://$url';
-    }
-    
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   void _trackConversion() {
@@ -198,22 +185,16 @@ class _AdDetailDialogState extends State<AdDetailDialog> {
                                 top: 0,
                                 bottom: 0,
                                 child: Center(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.6),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: IconButton(
-                                      icon: const Icon(Icons.arrow_back_ios,
-                                          color: Colors.white, size: 24),
-                                      onPressed: () {
-                                        _galleryController.previousPage(
-                                          duration: const Duration(
-                                              milliseconds: 300),
-                                          curve: Curves.easeInOut,
-                                        );
-                                      },
-                                    ),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.chevron_left,
+                                        color: Colors.white, size: 32),
+                                    onPressed: () {
+                                      _galleryController.previousPage(
+                                        duration: const Duration(
+                                            milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -225,24 +206,18 @@ class _AdDetailDialogState extends State<AdDetailDialog> {
                                 top: 0,
                                 bottom: 0,
                                 child: Center(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.6),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: IconButton(
-                                      icon: const Icon(
-                                          Icons.arrow_forward_ios,
-                                          color: Colors.white,
-                                          size: 24),
-                                      onPressed: () {
-                                        _galleryController.nextPage(
-                                          duration: const Duration(
-                                              milliseconds: 300),
-                                          curve: Curves.easeInOut,
-                                        );
-                                      },
-                                    ),
+                                  child: IconButton(
+                                    icon: const Icon(
+                                        Icons.chevron_right,
+                                        color: Colors.white,
+                                        size: 32),
+                                    onPressed: () {
+                                      _galleryController.nextPage(
+                                        duration: const Duration(
+                                            milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -311,276 +286,6 @@ class _AdDetailDialogState extends State<AdDetailDialog> {
                         ),
                       ),
                       const SizedBox(height: 28),
-                    ],
-
-                    // Description Card (Prominent)
-                    if (widget.ad.description != null &&
-                        widget.ad.description!.isNotEmpty) ...[
-                      Card(
-                        elevation: 0,
-                        color: Colors.blue.withValues(alpha: 0.08),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(
-                            color: Colors.blue.withValues(alpha: 0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(18),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(Icons.description,
-                                        color: Colors.white, size: 22),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Deskripsi',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                widget.ad.description!,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  height: 1.6,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // Company Name Card
-                    if (widget.ad.companyName != null &&
-                        widget.ad.companyName!.isNotEmpty) ...[
-                      Card(
-                        elevation: 0,
-                        color: Colors.orange.withValues(alpha: 0.08),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(
-                            color: Colors.orange.withValues(alpha: 0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(18),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.orange,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(Icons.business,
-                                        color: Colors.white, size: 22),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Perusahaan',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                widget.ad.companyName!,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // Contact Info Card
-                    if (widget.ad.contactInfo != null &&
-                        widget.ad.contactInfo!.isNotEmpty) ...[
-                      Card(
-                        elevation: 0,
-                        color: Colors.green.withValues(alpha: 0.08),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(
-                            color: Colors.green.withValues(alpha: 0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(18),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(Icons.email,
-                                        color: Colors.white, size: 22),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Kontak',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              SelectableText(
-                                widget.ad.contactInfo!,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.blue,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // QR Code Section (Enhanced)
-                    if (widget.ad.websiteUrl != null &&
-                        widget.ad.websiteUrl!.isNotEmpty) ...[
-                      Card(
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.purple,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(Icons.qr_code,
-                                        color: Colors.white, size: 22),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Text(
-                                    'Scan untuk Kunjungi',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.grey[300]!,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: QrImageView(
-                                  data: widget.ad.websiteUrl!,
-                                  version: QrVersions.auto,
-                                  size: 220.0,
-                                  gapless: false,
-                                ),
-                              ),
-                              const SizedBox(height: 18),
-                              SelectableText(
-                                widget.ad.websiteUrl!,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.blue,
-                                  decoration: TextDecoration.underline,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // Website URL & Action Buttons (if URL exists)
-                    if (widget.ad.websiteUrl != null &&
-                        widget.ad.websiteUrl!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Center(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _launchUrl(widget.ad.websiteUrl!),
-                          icon: const Icon(Icons.open_in_new, size: 22),
-                          label: const Text('Buka Website'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 16,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            textStyle: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
                     ],
 
                     // Close Button

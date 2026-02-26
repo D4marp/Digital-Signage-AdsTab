@@ -25,10 +25,6 @@ class WebFileData {
 class _AdUploadDialogState extends State<AdUploadDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _companyNameController = TextEditingController();
-  final _contactInfoController = TextEditingController();
-  final _websiteUrlController = TextEditingController();
   int _durationSeconds = 5;
   List<String> _targetLocations = ['all'];
   io.File? _selectedFile;
@@ -38,14 +34,12 @@ class _AdUploadDialogState extends State<AdUploadDialog> {
   bool _isUploading = false;
   List<io.File> _galleryFiles = [];
   List<WebFileData> _galleryFilesWeb = [];
+  List<io.File> _aboutImageFiles = [];
+  List<WebFileData> _aboutImageFilesWeb = [];
 
   @override
   void dispose() {
     _titleController.dispose();
-    _descriptionController.dispose();
-    _companyNameController.dispose();
-    _contactInfoController.dispose();
-    _websiteUrlController.dispose();
     super.dispose();
   }
 
@@ -157,6 +151,55 @@ class _AdUploadDialogState extends State<AdUploadDialog> {
     });
   }
 
+  Future<void> _pickAboutImages() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png'],
+        allowMultiple: true,
+        withData: kIsWeb,
+        withReadStream: !kIsWeb,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        setState(() {
+          if (kIsWeb) {
+            // For web, store bytes only (never access path on web)
+            _aboutImageFilesWeb = result.files
+                .where((f) => f.bytes != null && f.bytes!.isNotEmpty)
+                .map((f) => WebFileData(name: f.name, bytes: f.bytes!))
+                .toList();
+            _aboutImageFiles = [];
+          } else {
+            // For mobile, store File objects with paths
+            _aboutImageFiles = result.files
+                .where((f) => f.path != null && f.path!.isNotEmpty)
+                .map((f) => io.File(f.path!))
+                .toList();
+            _aboutImageFilesWeb = [];
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking about images: ${e.toString()}')),
+        );
+      }
+      debugPrint('About images pick error: $e');
+    }
+  }
+
+  void _removeAboutImage(int index) {
+    setState(() {
+      if (kIsWeb) {
+        _aboutImageFilesWeb.removeAt(index);
+      } else {
+        _aboutImageFiles.removeAt(index);
+      }
+    });
+  }
+
   Future<void> _handleUpload() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -255,26 +298,59 @@ class _AdUploadDialogState extends State<AdUploadDialog> {
         }
       }
 
-      debugPrint('Creating ad with ${galleryUrls.length} gallery images...');
+      // Upload about images
+      List<String> aboutUrls = [];
+      
+      if (kIsWeb && _aboutImageFilesWeb.isNotEmpty) {
+        debugPrint('Processing ${_aboutImageFilesWeb.length} web about images...');
+        
+        final webAboutFiles = _aboutImageFilesWeb.asMap().entries.map((entry) {
+          final i = entry.key;
+          final webFile = entry.value;
+          return {
+            'name': 'about_${DateTime.now().millisecondsSinceEpoch}_${i}_${webFile.name}',
+            'bytes': webFile.bytes,
+          };
+        }).toList();
+        
+        aboutUrls = await uploadService.batchUpload(webAboutFiles);
+        debugPrint('✓ Uploaded ${aboutUrls.length} web about images');
+        
+      } else if (!kIsWeb && _aboutImageFiles.isNotEmpty) {
+        debugPrint('Processing ${_aboutImageFiles.length} mobile about images...');
+        
+        List<Map<String, dynamic>> mobileAboutFiles = [];
+        for (var i = 0; i < _aboutImageFiles.length; i++) {
+          final file = _aboutImageFiles[i];
+          final fileExtName = file.path.split('/').last;
+          final aboutFileName = 'about_${DateTime.now().millisecondsSinceEpoch}_${i}_$fileExtName';
+          
+          if (!uploadService.validateFile(aboutFileName)) {
+            debugPrint('⚠ Skipping invalid about file: $aboutFileName');
+            continue;
+          }
+          
+          mobileAboutFiles.add({
+            'name': aboutFileName,
+            'file': file,
+          });
+        }
+        
+        if (mobileAboutFiles.isNotEmpty) {
+          aboutUrls = await uploadService.batchUpload(mobileAboutFiles);
+          debugPrint('✓ Uploaded ${aboutUrls.length} mobile about images');
+        }
+      }
+
+      debugPrint('Creating ad with ${galleryUrls.length} gallery images and ${aboutUrls.length} about images...');
       final success = await adProvider.createAd(
         title: _titleController.text.trim(),
         mediaUrl: mediaUrl,
         mediaType: _mediaType!,
         durationSeconds: _durationSeconds,
         targetLocations: _targetLocations,
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
-            : _descriptionController.text.trim(),
-        companyName: _companyNameController.text.trim().isEmpty 
-            ? null 
-            : _companyNameController.text.trim(),
-        contactInfo: _contactInfoController.text.trim().isEmpty 
-            ? null 
-            : _contactInfoController.text.trim(),
-        websiteUrl: _websiteUrlController.text.trim().isEmpty 
-            ? null 
-            : _websiteUrlController.text.trim(),
         galleryImages: galleryUrls.isNotEmpty ? galleryUrls : null,
+        aboutImages: aboutUrls.isNotEmpty ? aboutUrls : null,
       );
 
       debugPrint('========== UPLOAD COMPLETE ==========');
@@ -543,71 +619,6 @@ class _AdUploadDialogState extends State<AdUploadDialog> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Description
-                      TextFormField(
-                        controller: _descriptionController,
-                        decoration: InputDecoration(
-                          labelText: 'Description (Optional)',
-                          hintText: 'Enter ad description',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: const Icon(Icons.description),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Company Name
-                      TextFormField(
-                        controller: _companyNameController,
-                        decoration: InputDecoration(
-                          labelText: 'Company Name (Optional)',
-                          hintText: 'Your company name',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: const Icon(Icons.business),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Contact Info
-                      TextFormField(
-                        controller: _contactInfoController,
-                        decoration: InputDecoration(
-                          labelText: 'Contact Info (Optional)',
-                          hintText: 'Email or phone number',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: const Icon(Icons.phone),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Website URL
-                      TextFormField(
-                        controller: _websiteUrlController,
-                        decoration: InputDecoration(
-                          labelText: 'Website URL (Optional)',
-                          hintText: 'https://example.com',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: const Icon(Icons.language),
-                          filled: true,
-                          fillColor: Colors.grey.shade50,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
                       // Display Settings Section
                       Text(
                         'Display Settings',
@@ -812,6 +823,133 @@ class _AdUploadDialogState extends State<AdUploadDialog> {
                                           ),
                                         ),
                                       ],
+                                    );
+                                  },
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // About Images Section
+                      Text(
+                        'About Images (Optional)',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.red.shade200),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.red.shade50,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  (kIsWeb ? _aboutImageFilesWeb.isEmpty : _aboutImageFiles.isEmpty)
+                                      ? 'No about images selected'
+                                      : '${kIsWeb ? _aboutImageFilesWeb.length : _aboutImageFiles.length} image(s) selected',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: _isUploading ? null : _pickAboutImages,
+                                  icon: const Icon(Icons.add_photo_alternate, size: 18),
+                                  label: const Text('Add Images'),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            if (kIsWeb ? _aboutImageFilesWeb.isEmpty : _aboutImageFiles.isEmpty)
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 24),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.image_not_supported,
+                                        size: 40,
+                                        color: Colors.red.shade300,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'No images yet',
+                                        style: TextStyle(
+                                          color: Colors.red.shade400,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else
+                              SizedBox(
+                                height: 100,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: kIsWeb ? _aboutImageFilesWeb.length : _aboutImageFiles.length,
+                                  itemBuilder: (context, index) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 12),
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            width: 100,
+                                            decoration: BoxDecoration(
+                                              border: Border.all(color: Colors.red.shade300),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(8),
+                                              child: kIsWeb && _aboutImageFilesWeb.isNotEmpty
+                                                  ? Image.memory(
+                                                      Uint8List.fromList(_aboutImageFilesWeb[index].bytes),
+                                                      fit: BoxFit.cover,
+                                                    )
+                                                  : Image.file(
+                                                      _aboutImageFiles[index],
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 4,
+                                            right: 4,
+                                            child: InkWell(
+                                              onTap: () => _removeAboutImage(index),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.red.shade500,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.close,
+                                                  color: Colors.white,
+                                                  size: 18,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     );
                                   },
                                 ),
